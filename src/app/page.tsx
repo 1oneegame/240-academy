@@ -1,8 +1,11 @@
+"use client";
 import Link from "next/link";
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
 
+  const router = useRouter();
   const features = [
     {
       title: "Видеокурсы",
@@ -47,13 +50,13 @@ export default function Home() {
 
   return (
     <div className="bg-white">
-      <section className="flex flex-col items-center py-48 min-h-screen">
+      <section className="flex flex-col items-center py-48 min-h-screen" >
         <div className="flex flex-col gap-y-4 container max-w-3xl px-6 py-4">
           <h1 className="font-semibold text-6xl text-blue-900 text-center">Мы персонально подготовим вас к сдаче экзамена NUET</h1>
           <p className="font-light text-3xl text-center text-gray-800">240Academy предлагает набор инструментов, способный помочь вам сдать экзамен NUET и поступить в  Назарбаев университет</p>
         </div>
         <div className="flex flex-row gap-x-4 pt-4 items-center">
-          <InteractiveHoverButton className="border border-gray-200 px-6 py-3 shadow-sm rounded-xl text-blue-900 text-xl font-normal">
+          <InteractiveHoverButton className="border border-gray-200 px-6 py-3 shadow-sm rounded-xl text-blue-900 text-xl font-normal" onClick={() => router.push("/student")}>
             Начать подготовку
           </InteractiveHoverButton>
         </div>
@@ -82,14 +85,14 @@ export default function Home() {
               </div>
             ))}
           </div>
-          <InteractiveHoverButton className="border border-gray-200 px-6 py-3 shadow-sm rounded-xl text-blue-900 text-2xl font-normal cursor-pointer">
+          <InteractiveHoverButton className="border border-gray-200 px-6 py-3 shadow-sm rounded-xl text-blue-900 text-2xl font-normal cursor-pointer" onClick={() => router.push("/student")}>
             Начать подготовку
           </InteractiveHoverButton>
         </div>
       </section>
       <footer className="bg-black flex flex-col px-16 pt-16"> 
           <h2 className="text-xl font-semibold text-gray-100 pb-4">240Academy</h2>
-          <div className="flex flex-col text-gray-100 pb-4">
+          <div className="flex flex-col text-gray-100 pb-4 w-fit">
             <Link href="https://t.me/240Academy">Telegram</Link>
             <Link href="https://www.instagram.com/240academy/">Instagram</Link>
             <Link href="https://www.facebook.com/240academy">Facebook</Link>
