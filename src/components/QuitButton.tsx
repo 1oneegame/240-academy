@@ -2,15 +2,28 @@
 import React from "react";
 import { LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { signOut } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 
 interface QuitButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {}
 
 export const QuitButton = React.forwardRef<HTMLButtonElement, QuitButtonProps>(
   ({ className, onClick, ...props }, ref) => {
+    const router = useRouter();
+
+    const handleSignOut = async () => {
+      try {
+        await signOut();
+        router.push('/auth');
+      } catch (error) {
+        console.error('Ошибка при выходе:', error);
+      }
+    };
+
     return (
       <button
         ref={ref}
-        onClick={onClick}
+        onClick={onClick || handleSignOut}
         className={cn(
           "group relative flex items-center justify-center w-12 h-12 rounded-full border-2 border-red-500 bg-white hover:bg-red-500 transition-all duration-300 shadow-sm hover:shadow-md hover:scale-110 cursor-pointer",
           className

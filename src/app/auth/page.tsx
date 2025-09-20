@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { authClient } from '@/lib/auth-client';
 
 const AuthPage: React.FC = () => {
   const router = useRouter();
@@ -52,18 +53,36 @@ const AuthPage: React.FC = () => {
       }
 
       if (isLogin) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        const result = await authClient.signIn.email({
+          email: email,
+          password: password,
+        });
+
+        if (result.error) {
+          throw new Error(result.error.message || 'Ошибка входа');
+        }
+
         setIsSuccess(true);
         setTimeout(() => {
           router.push('/student');
         }, 800);
       } else {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        const result = await authClient.signUp.email({
+          email: email,
+          password: password,
+          name: firstName,
+          surname: lastName,
+          phone: whatsappNumber,
+        });
+
+        if (result.error) {
+          throw new Error(result.error.message || 'Ошибка регистрации');
+        }
+
         setIsSuccess(true);
-        setError('Регистрация успешна! Вы можете зарегистрировать еще одного пользователя или перейти к входу.');
         setTimeout(() => {
-          resetForm();
-        }, 3000);
+          router.push('/student');
+        }, 800);
       }
 
     } catch (err: any) {
@@ -298,30 +317,30 @@ const AuthPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <div>
-                <a
-                  href="#"
-                  className="w-full inline-flex justify-center py-2 px-4 border border-input rounded-md shadow-sm bg-background text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-                >
-                  <span className="sr-only">Войти через Google</span>
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
-                  </svg>
-                </a>
-              </div>
-
-              <div>
-                <a
-                  href="#"
-                  className="w-full inline-flex justify-center py-2 px-4 border border-input rounded-md shadow-sm bg-background text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-                >
-                  <span className="sr-only">Войти через VK</span>
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M21.547 7h-3.29a.743.743 0 0 0-.655.392s-1.312 2.416-1.734 3.23c-1.37 2.76-1.9 2.875-2.07 2.875-.264 0-.264-.67-.264-1.053V7.074a.723.723 0 0 0-.725-.725h-1.945c-.34 0-.514.158-.514.158s-.514.513.09.513c.604 0 .604 1.758.604 1.758v2.677c0 .514-.176.514-.513.514-.88 0-2.835-3.054-4.26-6.598a.658.658 0 0 0-.604-.425H3.93a.725.725 0 0 0-.725.725c0 .67 1.304 7.024 5.987 11.725C12.01 20.678 15.2 20.9 16.38 20.9c.693 0 .957-.158.957-.67v-1.572c0-.514.158-.67.513-.67.34 0 .88.158 2.184 1.37.514.513 1.37 1.37 1.883 1.37h2.93c.4 0 .605-.158.605-.67 0-.513-1.39-2.503-2.798-4.26-.692-.88-.692-.88 0-1.76 0 0 2.416-3.407 2.677-4.593.09-.4 0-.67-.514-.67z" />
-                  </svg>
-                </a>
-              </div>
+            <div className="mt-6 grid grid-cols-1 gap-3">
+              <button
+                onClick={async () => {
+                  try {
+                    const result = await authClient.signIn.social({
+                      provider: "google",
+                    });
+                    if (result.error) {
+                      setError(result.error.message || 'Ошибка входа через Google');
+                    } else {
+                      router.push('/student');
+                    }
+                  } catch (err: any) {
+                    setError(err?.message || 'Ошибка входа через Google');
+                  }
+                }}
+                className="w-full inline-flex justify-center py-2 px-4 border border-input rounded-md shadow-sm bg-background text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+              >
+                <span className="sr-only">Войти через Google</span>
+                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
+                </svg>
+                Войти через Google
+              </button>
             </div>
           </div>
         </div>

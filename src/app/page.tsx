@@ -2,9 +2,11 @@
 import Link from "next/link";
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
 import { useRouter } from "next/navigation";
+import { useSession } from "@/lib/auth-client";
 
 export default function Home() {
-
+  const { data: session } = useSession();
+  
   const router = useRouter();
   const features = [
     {
@@ -56,9 +58,15 @@ export default function Home() {
           <p className="font-light text-3xl text-center text-gray-800">240Academy предлагает набор инструментов, способный помочь вам сдать экзамен NUET и поступить в  Назарбаев университет</p>
         </div>
         <div className="flex flex-row gap-x-4 pt-4 items-center">
-          <InteractiveHoverButton className="border border-gray-200 px-6 py-3 shadow-sm rounded-xl text-blue-900 text-xl font-normal" onClick={() => router.push("/student")}>
-            Начать подготовку
+          {session ? (
+            <InteractiveHoverButton className="border border-gray-200 px-6 py-3 shadow-sm rounded-xl text-blue-900 text-xl font-normal" onClick={() => router.push("/student")}>
+              Начать подготовку
+            </InteractiveHoverButton>
+          ) : (
+          <InteractiveHoverButton className="border border-gray-200 px-6 py-3 shadow-sm rounded-xl text-blue-900 text-xl font-normal" onClick={() => router.push("/auth")}>
+            Войти в систему
           </InteractiveHoverButton>
+          )}
         </div>
       </section>
       <section className="bg-blue-900 flex flex-col items-center pt-32 pb-48 min-h-screen">
@@ -85,9 +93,15 @@ export default function Home() {
               </div>
             ))}
           </div>
-          <InteractiveHoverButton className="border border-gray-200 px-6 py-3 shadow-sm rounded-xl text-blue-900 text-2xl font-normal cursor-pointer" onClick={() => router.push("/student")}>
-            Начать подготовку
-          </InteractiveHoverButton>
+          {session ? (
+            <InteractiveHoverButton className="border border-gray-200 px-6 py-3 shadow-sm rounded-xl text-blue-900 text-2xl font-normal cursor-pointer" onClick={() => router.push("/student")}>
+              Начать подготовку
+            </InteractiveHoverButton>
+          ) : (
+            <InteractiveHoverButton className="border border-gray-200 px-6 py-3 shadow-sm rounded-xl text-blue-900 text-2xl font-normal cursor-pointer" onClick={() => router.push("/auth")}>
+              Войти в систему
+            </InteractiveHoverButton>
+          )}
         </div>
       </section>
       <footer className="bg-black flex flex-col px-16 pt-16"> 

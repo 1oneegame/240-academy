@@ -1,17 +1,19 @@
 "use client";
 import { User, ArrowLeft } from "lucide-react";
 import { QuitButton } from "@/components/QuitButton";
+import { ProtectedRoute } from "@/components/protected-route";
 import { useRouter } from "next/navigation";
+import { useSession } from "@/lib/auth-client";
 
 export default function StudentPage() {
-
     const router = useRouter();
+    const { data: session } = useSession();
 
     const student = {
-        name: "Ayzhas",
-        surname: "Serikov",
-        email: "ayzhas@example.com",
-        phone: "+7 (707) 123-4567",
+        name: session?.user?.name || "Пользователь",
+        surname: (session?.user as any)?.surname || "",
+        email: session?.user?.email || "user@example.com",
+        phone: (session?.user as any)?.phone || "+7 (707) 123-4567",
     }
     const sections = [
         {
@@ -45,7 +47,8 @@ export default function StudentPage() {
     ]
 
   return (
-    <div className="flex flex-col pt-8 min-h-screen bg-white">
+    <ProtectedRoute>
+      <div className="flex flex-col pt-8 min-h-screen bg-white">
         <button className="cursor-pointer w-fit flex flex-row gap-x-1 text-gray-600 hover:text-blue-900 transition-colors duration-300 p-4 items-center ml-12" onClick={() => router.push("/")}>
             <ArrowLeft className="w-6 h-6" />
             <span className="text-lg font-xl">
@@ -67,7 +70,6 @@ export default function StudentPage() {
                         <p className="text-lg font-light text-gray-900">{student.email}</p>
                     </div>
                     <QuitButton
-                        onClick={() => router.push("/")}
                         className="ml-1 my-auto"
                     />
                 </div>      
@@ -98,6 +100,7 @@ export default function StudentPage() {
                 ))}
             </div>
         </section>
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }
