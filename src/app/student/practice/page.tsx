@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { ProtectedRoute } from '@/components/protected-route';
 import { BackToHomeButton } from '@/components/BackToHomeButton';
+import TestInterface from '@/components/TestInterface';
 import { Test, Question, TestResult } from '@/types/test';
 import { Play, CheckCircle, Clock, BookOpen, ArrowLeft, ArrowRight, Target, Brain, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -15,14 +16,9 @@ export default function PracticePage() {
   const [mode, setMode] = useState<Mode>('selection');
   const [tests, setTests] = useState<Test[]>([]);
   const [selectedTest, setSelectedTest] = useState<Test | null>(null);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [answers, setAnswers] = useState<(number | null)[]>([]);
-  const [showResult, setShowResult] = useState(false);
   const [testPhase, setTestPhase] = useState<TestPhase>('active');
-  const [timeLeft, setTimeLeft] = useState(0);
-  const [isTimerActive, setIsTimerActive] = useState(false);
   const [score, setScore] = useState(0);
+  const [answers, setAnswers] = useState<(number | null)[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showModeModal, setShowModeModal] = useState(false);
@@ -35,21 +31,6 @@ export default function PracticePage() {
     fetchTests();
   }, []);
 
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isTimerActive && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft(prev => {
-          if (prev <= 1) {
-            handleTimeUp();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isTimerActive]);
 
   const fetchTests = async () => {
     try {
@@ -88,18 +69,6 @@ export default function PracticePage() {
     }
   };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const handleTimeUp = () => {
-    setIsTimerActive(false);
-    if (mode === 'exam') {
-      finishTest();
-    }
-  };
 
   const getRandomTest = (): Test | null => {
     if (!tests || tests.length === 0) return null;
@@ -127,62 +96,15 @@ export default function PracticePage() {
     setSelectedTest(test);
     setMode(modeType);
     setCurrentTestMode(modeType);
-    setCurrentQuestionIndex(0);
-    setAnswers(new Array(test.questions.length).fill(null));
-    setSelectedAnswer(null);
-    setShowResult(false);
     setTestPhase('active');
     setScore(0);
     setShowModeModal(false);
     setTestForModal(null);
     setTestStartTime(Date.now());
     
-    if (modeType === 'exam' && test.timeLimit && test.timeLimit > 0) {
-      setTimeLeft(test.timeLimit * 60);
-      setIsTimerActive(true);
-    } else {
-      setTimeLeft(0);
-      setIsTimerActive(false);
-    }
-    
     toast.success(modeType === 'exam' ? 'Экзамен начат! Удачи!' : 'Тренировка начата!');
   };
 
-  const handleAnswerSelect = (answerIndex: number) => {
-    if (!currentQuestion || answerIndex < 0 || answerIndex >= currentQuestion.options.length) {
-      return;
-    }
-    
-    setSelectedAnswer(answerIndex);
-    
-    const newAnswers = [...answers];
-    newAnswers[currentQuestionIndex] = answerIndex;
-    setAnswers(newAnswers);
-    
-    if (mode === 'training') {
-      setShowResult(true);
-    }
-  };
-
-  const handleNextQuestion = () => {
-    if (selectedAnswer === null || !selectedTest || !selectedTest.questions) return;
-    
-    if (currentQuestionIndex < selectedTest.questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setSelectedAnswer(answers[currentQuestionIndex + 1]);
-      setShowResult(false);
-    } else {
-      finishTest();
-    }
-  };
-
-  const handlePreviousQuestion = () => {
-    if (currentQuestionIndex > 0 && answers) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
-      setSelectedAnswer(answers[currentQuestionIndex - 1]);
-      setShowResult(false);
-    }
-  };
 
   const saveTestResult = async (testId: string, testTitle: string, score: number, totalQuestions: number, percentage: number, answers: (number | null)[], mode: 'exam' | 'training', timeSpent: number) => {
     try {
@@ -214,114 +136,16 @@ export default function PracticePage() {
     }
   };
 
-  const finishTest = async () => {
-    setIsTimerActive(false);
-    const finalScore = calculateScore();
-    setScore(finalScore);
-    setTestPhase('results');
-    
-    if (!selectedTest || !selectedTest.questions) {
-      toast.error('Ошибка при завершении теста');
-      return;
-    }
-    
-    const percentage = Math.round((finalScore / selectedTest.questions.length) * 100);
-    const completedAt = new Date();
-    const timeSpent = testStartTime ? Math.round((Date.now() - testStartTime) / 1000) : 0;
-    
-    if (session?.user) {
-      try {
-        console.log('Отправка результата теста:', {
-          testId: selectedTest._id || '',
-          testTitle: selectedTest.title,
-          score: finalScore,
-          totalQuestions: selectedTest.questions.length,
-          percentage: percentage,
-          answers: answers,
-          mode: currentTestMode || 'training',
-          timeSpent: timeSpent
-        });
-        
-        const response = await fetch('/api/test-results', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            testId: selectedTest._id || '',
-            testTitle: selectedTest.title,
-            score: finalScore,
-            totalQuestions: selectedTest.questions.length,
-            percentage: percentage,
-            answers: answers,
-            mode: currentTestMode || 'training',
-            timeSpent: timeSpent
-          }),
-        });
-        
-        console.log('Ответ сервера:', response.status, response.statusText);
-        
-        if (response.ok) {
-          const result = await response.json();
-          console.log('Результат теста сохранен:', result);
-          toast.success('Результат сохранен!');
-        } else {
-          const errorData = await response.json();
-          console.error('Ошибка при сохранении результата теста:', errorData);
-          toast.error('Ошибка при сохранении результата');
-        }
-      } catch (error) {
-        console.error('Ошибка при сохранении результата теста:', error);
-        toast.error('Ошибка при сохранении результата');
-      }
-    } else {
-      console.log('Пользователь не авторизован, результат не сохранен');
-    }
-    
-    toast.success(`Тест завершен! Вы набрали ${percentage}%`);
-  };
-
-  const calculateScore = (): number => {
-    if (!selectedTest || !selectedTest.questions || !answers) return 0;
-    
-    let correct = 0;
-    answers.forEach((answer, index) => {
-      if (answer !== null && index < selectedTest.questions.length) {
-        const question = selectedTest.questions[index];
-        if (question && typeof answer === 'number' && answer === question.correctAnswer) {
-          correct++;
-        }
-      }
-    });
-    
-    return correct;
-  };
 
   const resetToSelection = () => {
     setMode('selection');
     setSelectedTest(null);
-    setCurrentQuestionIndex(0);
-    setAnswers([]);
-    setSelectedAnswer(null);
-    setShowResult(false);
     setTestPhase('active');
-    setTimeLeft(0);
-    setIsTimerActive(false);
     setScore(0);
     setError(null);
     setCurrentTestMode(null);
     setTestStartTime(0);
   };
-
-  const getCurrentQuestion = (): Question | null => {
-    if (!selectedTest || !selectedTest.questions || currentQuestionIndex >= selectedTest.questions.length || currentQuestionIndex < 0) {
-      return null;
-    }
-    return selectedTest.questions[currentQuestionIndex];
-  };
-
-  const currentQuestion = getCurrentQuestion();
-  const isCorrect = selectedAnswer !== null && currentQuestion && selectedAnswer === currentQuestion.correctAnswer;
 
   if (loading) {
     return (
@@ -505,153 +329,41 @@ export default function PracticePage() {
   }
 
 
-  if ((mode === 'exam' || mode === 'training') && testPhase === 'active' && selectedTest && selectedTest.questions && selectedTest.questions.length > 0 && currentQuestion) {
+  if ((mode === 'exam' || mode === 'training') && testPhase === 'active' && selectedTest && selectedTest.questions && selectedTest.questions.length > 0) {
     return (
       <ProtectedRoute>
-        <div className="flex flex-col pt-8 min-h-screen bg-white">
-          <div className="flex justify-between items-center px-12 py-4 border-b border-gray-200">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={resetToSelection}
-                className="text-blue-600 hover:text-blue-800 flex items-center gap-2 font-medium"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Выйти
-              </button>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">Тест:</span>
-                <span className="font-semibold text-blue-900">
-                  {selectedTest.title}
-                </span>
-              </div>
-            </div>
+        <TestInterface
+          test={selectedTest}
+          mode={mode}
+          onFinish={(score, testAnswers) => {
+            setScore(score);
+            setAnswers(testAnswers);
+            setTestPhase('results');
+            const percentage = Math.round((score / selectedTest.questions.length) * 100);
+            const timeSpent = testStartTime ? Math.round((Date.now() - testStartTime) / 1000) : 0;
             
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">Вопрос:</span>
-                <span className="font-semibold text-blue-900">
-                  {currentQuestionIndex + 1} / {selectedTest.questions.length}
-                </span>
-              </div>
-              {isTimerActive && (
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-gray-600" />
-                  <span className={`font-mono text-lg font-bold ${
-                    timeLeft < 300 ? 'text-red-600' : 'text-blue-600'
-                  }`}>
-                    {formatTime(timeLeft)}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="flex-1 px-12 py-8">
-            <div className="max-w-4xl mx-auto">
-              <div className="mb-8">
-                <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
-                  <div 
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
-                    style={{ width: `${((currentQuestionIndex + 1) / selectedTest.questions.length) * 100}%` }}
-                  />
-                </div>
-              </div>
-
-              <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
-                <h3 className="text-2xl font-semibold text-blue-900 mb-8">
-                  {currentQuestion.question}
-                </h3>
-
-                <div className="space-y-4 mb-8">
-                  {currentQuestion.options.map((option, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleAnswerSelect(index)}
-                      disabled={showResult && mode === 'training'}
-                      className={cn(
-                        "w-full p-4 text-left rounded-xl border-2 transition-all duration-200",
-                        {
-                          "border-blue-500 bg-blue-50 text-blue-900": selectedAnswer === index && (!showResult || mode === 'exam'),
-                          "border-gray-200 hover:border-gray-300 hover:bg-gray-50": selectedAnswer !== index && (!showResult || mode === 'exam'),
-                          "border-green-500 bg-green-50 text-green-800": showResult && mode === 'training' && index === currentQuestion.correctAnswer,
-                          "border-red-500 bg-red-50 text-red-800": showResult && mode === 'training' && selectedAnswer === index && index !== currentQuestion.correctAnswer,
-                          "border-gray-200 bg-gray-50 text-gray-600": showResult && mode === 'training' && selectedAnswer !== index && index !== currentQuestion.correctAnswer,
-                        }
-                      )}
-                    >
-                      <span className="font-medium mr-3">{String.fromCharCode(65 + index)}.</span>
-                      {option}
-                    </button>
-                  ))}
-                </div>
-
-                {showResult && mode === 'training' && (
-                  <div className={cn(
-                    "p-6 rounded-xl mb-8 border",
-                    isCorrect ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
-                  )}>
-                    <div className={cn(
-                      "font-semibold mb-4 flex items-center gap-2 text-lg",
-                      isCorrect ? "text-green-800" : "text-red-800"
-                    )}>
-                      {isCorrect ? (
-                        <>
-                          <CheckCircle className="w-5 h-5" />
-                          Правильно!
-                        </>
-                      ) : (
-                        <>
-                          <RotateCcw className="w-5 h-5" />
-                          Неправильно
-                        </>
-                      )}
-                    </div>
-                    {currentQuestion.explanation && (
-                      <div className="text-gray-700">
-                        <strong>Объяснение:</strong> {currentQuestion.explanation}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div className="flex justify-between items-center">
-                  <button
-                    onClick={handlePreviousQuestion}
-                    disabled={currentQuestionIndex === 0}
-                    className={cn(
-                      "px-6 py-3 rounded-xl font-medium transition-colors flex items-center gap-2",
-                      currentQuestionIndex === 0
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                    )}
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    Предыдущий
-                  </button>
-                  
-                  <button
-                    onClick={handleNextQuestion}
-                    disabled={selectedAnswer === null}
-                    className={cn(
-                      "px-6 py-3 rounded-xl font-medium transition-colors flex items-center gap-2",
-                      selectedAnswer === null
-                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-blue-600 text-white hover:bg-blue-700"
-                    )}
-                  >
-                    {currentQuestionIndex < selectedTest.questions.length - 1 ? 'Следующий' : 'Завершить'}
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+            if (session?.user) {
+              saveTestResult(
+                selectedTest._id || '',
+                selectedTest.title,
+                score,
+                selectedTest.questions.length,
+                percentage,
+                testAnswers,
+                mode,
+                timeSpent
+              );
+            }
+            
+            toast.success(`Тест завершен! Вы набрали ${percentage}%`);
+          }}
+          onExit={resetToSelection}
+        />
       </ProtectedRoute>
     );
   }
 
-  if ((mode === 'exam' || mode === 'training') && testPhase === 'active' && (!selectedTest || !selectedTest.questions || selectedTest.questions.length === 0 || !currentQuestion)) {
+  if ((mode === 'exam' || mode === 'training') && testPhase === 'active' && (!selectedTest || !selectedTest.questions || selectedTest.questions.length === 0)) {
     return (
       <ProtectedRoute>
         <div className="flex flex-col pt-8 min-h-screen bg-white">

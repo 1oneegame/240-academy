@@ -40,9 +40,9 @@ export default function StudentPage() {
             color: 'purple'
         },
         {
-            title: 'Other Studying Materials',
-            description: 'Дополнительные материалы для изучения',
-            href: '/student/materials',
+            title: 'Полезные ресурсы',
+            description: 'Дополнительные материалы и файлы для изучения',
+            href: '/student/resources',
             icon: '📚',
             color: 'orange'
         }

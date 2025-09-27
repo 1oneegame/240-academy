@@ -6,6 +6,8 @@ import { useState, useEffect } from "react";
 import { Course } from "@/types/course";
 import { Test } from "@/types/test";
 import { VideoCourse } from "@/types/video-course";
+import { Resource } from "@/types/resource";
+import { User, UserStats } from "@/types/user";
 
 export default function AdminPanel() {
   const router = useRouter();
@@ -13,14 +15,28 @@ export default function AdminPanel() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [videoCourses, setVideoCourses] = useState<VideoCourse[]>([]);
   const [tests, setTests] = useState<Test[]>([]);
+  const [resources, setResources] = useState<Resource[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [usersPage, setUsersPage] = useState(1);
+  const [usersTotalPages, setUsersTotalPages] = useState(1);
+  const [usersSearch, setUsersSearch] = useState('');
+  const [usersRole, setUsersRole] = useState('');
 
   useEffect(() => {
     checkAdminAccess();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'users' && isAdmin) {
+      fetchUsers(1, usersSearch, usersRole);
+    }
+  }, [activeTab, isAdmin]);
 
   const checkAdminAccess = async () => {
     try {
@@ -42,26 +58,67 @@ export default function AdminPanel() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [coursesRes, videoCoursesRes, testsRes, statsRes] = await Promise.all([
+      const [coursesRes, videoCoursesRes, testsRes, resourcesRes, statsRes, userStatsRes] = await Promise.all([
         fetch('/api/courses'),
         fetch('/api/video-courses'),
         fetch('/api/tests'),
-        fetch('/api/admin/stats')
+        fetch('/api/admin/resources'),
+        fetch('/api/admin/stats'),
+        fetch('/api/admin/users/stats')
       ]);
       
-      const coursesData = await coursesRes.json();
-      const videoCoursesData = await videoCoursesRes.json();
-      const testsData = await testsRes.json();
-      const statsData = await statsRes.json();
+      const coursesData = coursesRes.ok ? await coursesRes.json() : [];
+      const videoCoursesData = videoCoursesRes.ok ? await videoCoursesRes.json() : [];
+      const testsData = testsRes.ok ? await testsRes.json() : [];
+      const resourcesData = resourcesRes.ok ? await resourcesRes.json() : [];
+      const statsData = statsRes.ok ? await statsRes.json() : null;
+      const userStatsData = userStatsRes.ok ? await userStatsRes.json() : null;
       
-      setCourses(coursesData);
-      setVideoCourses(videoCoursesData);
-      setTests(testsData);
+      setCourses(Array.isArray(coursesData) ? coursesData : []);
+      setVideoCourses(Array.isArray(videoCoursesData) ? videoCoursesData : []);
+      setTests(Array.isArray(testsData) ? testsData : []);
+      setResources(Array.isArray(resourcesData) ? resourcesData : []);
       setStats(statsData);
+      setUserStats(userStatsData);
     } catch (error) {
       console.error('Error fetching data:', error);
+      setCourses([]);
+      setVideoCourses([]);
+      setTests([]);
+      setResources([]);
+      setStats(null);
+      setUserStats(null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUsers = async (page = 1, search = '', role = '') => {
+    try {
+      setUsersLoading(true);
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '10',
+        ...(search && { search }),
+        ...(role && { role })
+      });
+      
+      const response = await fetch(`/api/admin/users?${params}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        setUsers(data.users || []);
+        setUsersTotalPages(data.pagination?.pages || 1);
+        setUsersPage(page);
+      } else {
+        console.error('Error fetching users:', data.error);
+        setUsers([]);
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      setUsers([]);
+    } finally {
+      setUsersLoading(false);
     }
   };
 
@@ -85,17 +142,17 @@ export default function AdminPanel() {
       icon: "📝"
     },
     {
+      id: "resources",
+      title: "Ресурсы",
+      description: "Управление полезными ресурсами",
+      icon: "📚"
+    },
+    {
       id: "users",
       title: "Пользователи",
       description: "Управление пользователями",
       icon: "👥"
     },
-    {
-      id: "analytics",
-      title: "Аналитика",
-      description: "Статистика и отчеты",
-      icon: "📈"
-    }
   ];
 
   const renderDashboard = () => (
@@ -272,6 +329,109 @@ export default function AdminPanel() {
     }
   };
 
+  const handleDeleteResource = async (resourceId: string) => {
+    if (confirm('Вы уверены, что хотите удалить этот ресурс?')) {
+      try {
+        const response = await fetch(`/api/resources/${resourceId}`, {
+          method: 'DELETE'
+        });
+        if (response.ok) {
+          fetchData();
+        }
+      } catch (error) {
+        console.error('Error deleting resource:', error);
+      }
+    }
+  };
+
+  const toggleResourcePublish = async (resource: Resource) => {
+    try {
+      const response = await fetch(`/api/resources/${resource._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...resource,
+          isPublished: !resource.isPublished
+        })
+      });
+
+      if (response.ok) {
+        setResources(resources.map(r => 
+          r._id === resource._id ? { ...r, isPublished: !r.isPublished } : r
+        ));
+      } else {
+        alert('Ошибка при изменении статуса публикации');
+      }
+    } catch (error) {
+      console.error('Error updating resource:', error);
+      alert('Ошибка при изменении статуса публикации');
+    }
+  };
+
+  const toggleUserStatus = async (user: User) => {
+    try {
+      const response = await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId: user._id,
+          isActive: !user.isActive
+        })
+      });
+
+      if (response.ok) {
+        const updatedUser = await response.json();
+        setUsers(users.map(u => 
+          u._id === user._id ? { ...u, isActive: updatedUser.isActive } : u
+        ));
+      } else {
+        alert('Ошибка при изменении статуса пользователя');
+      }
+    } catch (error) {
+      console.error('Error updating user:', error);
+      alert('Ошибка при изменении статуса пользователя');
+    }
+  };
+
+  const changeUserRole = async (user: User, newRole: 'user' | 'admin') => {
+    try {
+      const response = await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId: user._id,
+          role: newRole
+        })
+      });
+
+      if (response.ok) {
+        const updatedUser = await response.json();
+        setUsers(users.map(u => 
+          u._id === user._id ? { ...u, role: updatedUser.role } : u
+        ));
+      } else {
+        alert('Ошибка при изменении роли пользователя');
+      }
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      alert('Ошибка при изменении роли пользователя');
+    }
+  };
+
+  const handleUsersSearch = () => {
+    fetchUsers(1, usersSearch, usersRole);
+  };
+
+  const handleUsersPageChange = (page: number) => {
+    fetchUsers(page, usersSearch, usersRole);
+  };
+
   const renderTests = () => (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -333,63 +493,203 @@ export default function AdminPanel() {
     </div>
   );
 
+  const renderResources = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-3xl font-bold text-blue-900">Управление ресурсами</h2>
+        <button 
+          className="bg-blue-900 text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition-colors"
+          onClick={() => router.push("/admin/resources/new")}
+        >
+          Добавить ресурс
+        </button>
+      </div>
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900"></div>
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="space-y-4">
+            {resources.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">Ресурсы не найдены</p>
+            ) : (
+              resources.map((resource) => (
+                <div key={resource._id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-blue-900">{resource.title}</h3>
+                    <p className="text-gray-600 mb-2">{resource.description}</p>
+                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <span className="bg-gray-100 px-2 py-1 rounded">{resource.category}</span>
+                      <span className="bg-gray-100 px-2 py-1 rounded">{resource.type}</span>
+                      <span>{new Date(resource.createdAt).toLocaleDateString('ru-RU')}</span>
+                      <span className={resource.isPublished ? 'text-green-600' : 'text-orange-600'}>
+                        {resource.isPublished ? 'Опубликован' : 'Черновик'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button 
+                      className={`px-3 py-1 rounded transition-colors ${
+                        resource.isPublished 
+                          ? 'bg-orange-100 text-orange-800 hover:bg-orange-200' 
+                          : 'bg-green-100 text-green-800 hover:bg-green-200'
+                      }`}
+                      onClick={() => toggleResourcePublish(resource)}
+                    >
+                      {resource.isPublished ? 'Снять с публикации' : 'Опубликовать'}
+                    </button>
+                    <button 
+                      className="bg-red-100 text-red-800 px-3 py-1 rounded hover:bg-red-200 transition-colors"
+                      onClick={() => handleDeleteResource(resource._id!)}
+                    >
+                      Удалить
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   const renderUsers = () => (
     <div className="space-y-6">
-      <h2 className="text-3xl font-bold text-blue-900">Управление пользователями</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-3xl font-bold text-blue-900">Управление пользователями</h2>
+        {userStats && (
+          <div className="text-sm text-gray-600">
+            Всего: {userStats.total} | Активных: {userStats.active} | Студентов: {userStats.students} | Админов: {userStats.admins}
+          </div>
+        )}
+      </div>
+
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-            <div>
-              <h3 className="text-lg font-semibold text-blue-900">Айжан Нурланова</h3>
-              <p className="text-gray-600">aiyan.nur@example.com</p>
+        <div className="mb-6">
+          <div className="flex gap-4 mb-4">
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder="Поиск по имени или email..."
+                value={usersSearch}
+                onChange={(e) => setUsersSearch(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
             </div>
+            <select
+              value={usersRole}
+              onChange={(e) => setUsersRole(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">Все роли</option>
+              <option value="user">Пользователи</option>
+              <option value="admin">Администраторы</option>
+            </select>
+            <button
+              onClick={handleUsersSearch}
+              className="bg-blue-900 text-white px-6 py-2 rounded-lg hover:bg-blue-800 transition-colors"
+            >
+              Поиск
+            </button>
+          </div>
+        </div>
+
+        {usersLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900"></div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {users.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">Пользователи не найдены</p>
+            ) : (
+              users.map((user) => (
+                <div key={user._id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="text-lg font-semibold text-blue-900">{user.name}</h3>
+                      <span className={`px-2 py-1 rounded text-xs ${
+                        user.role === 'admin' 
+                          ? 'bg-purple-100 text-purple-800' 
+                          : 'bg-green-100 text-green-800'
+                      }`}>
+                        {user.role === 'admin' ? 'Администратор' : 'Пользователь'}
+                      </span>
+                      <span className={`px-2 py-1 rounded text-xs ${
+                        user.isActive 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {user.isActive ? 'Активен' : 'Заблокирован'}
+                      </span>
+                    </div>
+                    <p className="text-gray-600 mb-1">{user.email}</p>
+                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <span>Зарегистрирован: {new Date(user.createdAt).toLocaleDateString('ru-RU')}</span>
+                      {user.lastLoginAt && (
+                        <span>Последний вход: {new Date(user.lastLoginAt).toLocaleDateString('ru-RU')}</span>
+                      )}
+                      <span>Тестов пройдено: {user.testResultsCount || 0}</span>
+                      <span>Курсов завершено: {user.completedCoursesCount || 0}</span>
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => changeUserRole(user, user.role === 'admin' ? 'user' : 'admin')}
+                      className={`px-3 py-1 rounded transition-colors ${
+                        user.role === 'admin'
+                          ? 'bg-orange-100 text-orange-800 hover:bg-orange-200'
+                          : 'bg-purple-100 text-purple-800 hover:bg-purple-200'
+                      }`}
+                    >
+                      {user.role === 'admin' ? 'Сделать пользователем' : 'Сделать админом'}
+                    </button>
+                    <button
+                      onClick={() => toggleUserStatus(user)}
+                      className={`px-3 py-1 rounded transition-colors ${
+                        user.isActive
+                          ? 'bg-red-100 text-red-800 hover:bg-red-200'
+                          : 'bg-green-100 text-green-800 hover:bg-green-200'
+                      }`}
+                    >
+                      {user.isActive ? 'Заблокировать' : 'Разблокировать'}
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {usersTotalPages > 1 && (
+          <div className="flex justify-center mt-6">
             <div className="flex space-x-2">
-              <button className="bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200 transition-colors">
-                Подробнее
+              <button
+                onClick={() => handleUsersPageChange(usersPage - 1)}
+                disabled={usersPage === 1}
+                className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Назад
               </button>
-              <button className="bg-red-100 text-red-800 px-3 py-1 rounded hover:bg-red-200 transition-colors">
-                Заблокировать
+              <span className="px-3 py-1 text-gray-600">
+                Страница {usersPage} из {usersTotalPages}
+              </span>
+              <button
+                onClick={() => handleUsersPageChange(usersPage + 1)}
+                disabled={usersPage === usersTotalPages}
+                className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Вперед
               </button>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
 
-  const renderAnalytics = () => (
-    <div className="space-y-6">
-      <h2 className="text-3xl font-bold text-blue-900">Аналитика</h2>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <h3 className="text-xl font-semibold text-blue-900 mb-4">Статистика по курсам</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span>Математика</span>
-              <span className="font-semibold">85% завершений</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Физика</span>
-              <span className="font-semibold">72% завершений</span>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <h3 className="text-xl font-semibold text-blue-900 mb-4">Активность пользователей</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span>Сегодня</span>
-              <span className="font-semibold">156 активных</span>
-            </div>
-            <div className="flex justify-between">
-              <span>На этой неделе</span>
-              <span className="font-semibold">1,234 активных</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 
   const renderContent = () => {
     switch (activeTab) {
@@ -399,10 +699,10 @@ export default function AdminPanel() {
         return renderCourses();
       case "tests":
         return renderTests();
+      case "resources":
+        return renderResources();
       case "users":
         return renderUsers();
-      case "analytics":
-        return renderAnalytics();
       default:
         return renderDashboard();
     }

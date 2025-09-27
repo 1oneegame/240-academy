@@ -140,12 +140,6 @@ export default function VideoCoursesPage() {
             <div className="flex-1 px-12 py-8">
               <div className="max-w-4xl mx-auto">
                 <div className="mb-8">
-                  <button
-                    onClick={() => setSelectedCourse(null)}
-                    className="text-blue-600 hover:text-blue-800 mb-4 flex items-center gap-2"
-                  >
-                    ← Назад к курсам
-                  </button>
                   <h1 className="text-4xl font-semibold text-blue-900 mb-4">
                     {selectedCourse.title}
                   </h1>
