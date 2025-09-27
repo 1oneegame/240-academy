@@ -12,7 +12,6 @@ export async function GET() {
     
     return NextResponse.json(tests);
   } catch (error) {
-    console.error('Error fetching tests:', error);
     return NextResponse.json({ error: 'Failed to fetch tests' }, { status: 500 });
   }
 }
@@ -45,7 +44,6 @@ export async function POST(request: NextRequest) {
       testId: result.insertedId 
     });
   } catch (error) {
-    console.error('Error creating test:', error);
     return NextResponse.json({ error: 'Failed to create test' }, { status: 500 });
   }
 }

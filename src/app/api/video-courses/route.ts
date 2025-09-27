@@ -12,7 +12,6 @@ export async function GET() {
     
     return NextResponse.json(videoCourses);
   } catch (error) {
-    console.error('Error fetching video courses:', error);
     return NextResponse.json({ error: 'Failed to fetch video courses' }, { status: 500 });
   }
 }
@@ -47,7 +46,6 @@ export async function POST(request: NextRequest) {
       videoCourseId: result.insertedId 
     });
   } catch (error) {
-    console.error('Error creating video course:', error);
     return NextResponse.json({ error: 'Failed to create video course' }, { status: 500 });
   }
 }

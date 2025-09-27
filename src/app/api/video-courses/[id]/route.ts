@@ -22,7 +22,6 @@ export async function GET(
     
     return NextResponse.json(videoCourse);
   } catch (error) {
-    console.error('Error fetching video course:', error);
     return NextResponse.json({ error: 'Failed to fetch video course' }, { status: 500 });
   }
 }
@@ -66,7 +65,6 @@ export async function PUT(
     
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error updating video course:', error);
     return NextResponse.json({ error: 'Failed to update video course' }, { status: 500 });
   }
 }
@@ -88,7 +86,6 @@ export async function DELETE(
     
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting video course:', error);
     return NextResponse.json({ error: 'Failed to delete video course' }, { status: 500 });
   }
 }

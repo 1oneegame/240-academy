@@ -61,9 +61,12 @@ export default function StudentPage() {
                     </div>
                 </div>
                 <div className="flex flex-row border border-gray-200 rounded-xl px-5 py-4 gap-x-2 h-fit my-auto">
-                    <User className="w-14 h-14 text-blue-900 rounded-full border border-gray-200"/>
-                    <div className="flex flex-col mr-1">
-                        <h2 className="text-xl font-semibold text-blue-900">{student.name} {student.surname}</h2>
+                    <User 
+                        className="w-14 h-14 text-blue-900 rounded-full border border-gray-200 cursor-pointer hover:bg-blue-50 transition-colors"
+                        onClick={() => router.push('/student/profile')}
+                    />
+                    <div className="flex flex-col mr-1 cursor-pointer" onClick={() => router.push('/student/profile')}>
+                        <h2 className="text-xl font-semibold text-blue-900 hover:text-blue-700 transition-colors">{student.name} {student.surname}</h2>
                         <p className="text-lg font-light text-gray-900">{student.email}</p>
                     </div>
                     <QuitButton

@@ -49,7 +49,6 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('Error checking admin status:', error);
     return NextResponse.json({ isAdmin: false, error: 'Failed to check admin status' }, { status: 500 });
   }
 }
