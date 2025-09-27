@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { authClient } from '@/lib/auth-client';
+import { BackToHomeButton } from '@/components/BackToHomeButton';
 
 const AuthPage: React.FC = () => {
   const router = useRouter();
@@ -94,6 +95,7 @@ const AuthPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <BackToHomeButton className="mb-6" />
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-6 text-center text-3xl font-bold text-blue-900">
           {isLogin ? 'Вход в 240Academy' : 'Создание нового аккаунта'}

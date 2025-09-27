@@ -1,9 +1,11 @@
 "use client";
-import { User, ArrowLeft } from "lucide-react";
+import { User } from "lucide-react";
 import { QuitButton } from "@/components/QuitButton";
 import { ProtectedRoute } from "@/components/protected-route";
+import { BackToHomeButton } from "@/components/BackToHomeButton";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
+import { cn } from "@/lib/utils";
 
 export default function StudentPage() {
     const router = useRouter();
@@ -19,42 +21,37 @@ export default function StudentPage() {
         {
             title: 'НУЕТ Видеокурс',
             description: 'Полный курс подготовки к НУЕТ с видеолекциями',
-            href: '/student/video-course',
+            href: '/student/video-courses',
             icon: '🎥',
-            color: 'bg-blue-500'
+            color: 'blue'
         },
         {
             title: 'NUET Practice',
             description: 'Практические задания и тесты для подготовки',
             href: '/student/practice',
             icon: '📝',
-            color: 'bg-green-500'
+            color: 'green'
         },
         {
             title: 'Critical Thinking Training',
             description: 'Развитие критического мышления',
             href: '/student/critical-thinking',
             icon: '🧠',
-            color: 'bg-purple-500'
+            color: 'purple'
         },
         {
             title: 'Other Studying Materials',
             description: 'Дополнительные материалы для изучения',
             href: '/student/materials',
             icon: '📚',
-            color: 'bg-orange-500'
+            color: 'orange'
         }
     ]
 
   return (
     <ProtectedRoute>
       <div className="flex flex-col pt-8 min-h-screen bg-white">
-        <button className="cursor-pointer w-fit flex flex-row gap-x-1 text-gray-600 hover:text-blue-900 transition-colors duration-300 p-4 items-center ml-12" onClick={() => router.push("/")}>
-            <ArrowLeft className="w-6 h-6" />
-            <span className="text-lg font-xl">
-                Вернуться на главную
-            </span>
-        </button>
+        <BackToHomeButton />
         <section className="flex flex-col border-b border-gray-200 pb-8">
             <div className="flex justify-between flex-row pl-12 pr-6">
                 <div className="flex flex-col gap-y-4">
@@ -80,7 +77,15 @@ export default function StudentPage() {
                 {sections.map((section) => (
                     <div 
                         key={section.title} 
-                        className="group relative flex flex-col border border-gray-200 rounded-2xl p-8 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer bg-white"
+                        className={cn(
+                            "group relative flex flex-col border border-gray-200 rounded-2xl p-8 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer bg-white border-t-[6px]",
+                            {
+                                "border-t-blue-600": section.color === "blue",
+                                "border-t-green-600": section.color === "green", 
+                                "border-t-purple-600": section.color === "purple",
+                                "border-t-orange-600": section.color === "orange"
+                            }
+                        )}
                         onClick={() => router.push(section.href)}
                     >
                         <h2 className="text-2xl font-semibold text-blue-900 mb-4 group-hover:text-gray-700 transition-colors duration-300">

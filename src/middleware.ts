@@ -19,9 +19,20 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  if (pathname.startsWith('/admin')) {
+    const token = request.cookies.get('better-auth.session_token')
+    
+    if (!token) {
+      return NextResponse.redirect(new URL('/auth', request.url))
+    }
+
+    // Для админ-роутов проверка роли будет происходить на уровне компонентов
+    // Middleware только проверяет наличие токена
+  }
+
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/student/:path*', '/auth']
+  matcher: ['/student/:path*', '/auth', '/admin/:path*']
 }

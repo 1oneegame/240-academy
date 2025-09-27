@@ -3,11 +3,32 @@ import Link from "next/link";
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
+import { useState, useEffect } from "react";
 
 export default function Home() {
   const { data: session } = useSession();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
   
   const router = useRouter();
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (session) {
+        try {
+          const response = await fetch('/api/admin/check');
+          const data = await response.json();
+          setIsAdmin(data.isAdmin);
+        } catch (error) {
+          console.error('Error checking admin status:', error);
+          setIsAdmin(false);
+        }
+      }
+      setLoading(false);
+    };
+
+    checkAdminStatus();
+  }, [session]);
   const features = [
     {
       title: "Видеокурсы",
@@ -59,9 +80,16 @@ export default function Home() {
         </div>
         <div className="flex flex-row gap-x-4 pt-4 items-center">
           {session ? (
-            <InteractiveHoverButton className="border border-gray-200 px-6 py-3 shadow-sm rounded-xl text-blue-900 text-xl font-normal" onClick={() => router.push("/student")}>
-              Начать подготовку
-            </InteractiveHoverButton>
+            <>
+              <InteractiveHoverButton className="border border-gray-200 px-6 py-3 shadow-sm rounded-xl text-blue-900 text-xl font-normal" onClick={() => router.push("/student")}>
+                Начать подготовку
+              </InteractiveHoverButton>
+              {!loading && isAdmin && (
+                <InteractiveHoverButton className="border border-gray-200 px-6 py-3 shadow-sm rounded-xl text-blue-900 text-xl font-normal" onClick={() => router.push("/admin")}>
+                  Админ-панель
+                </InteractiveHoverButton>
+              )}
+            </>
           ) : (
           <InteractiveHoverButton className="border border-gray-200 px-6 py-3 shadow-sm rounded-xl text-blue-900 text-xl font-normal" onClick={() => router.push("/auth")}>
             Войти в систему
@@ -94,9 +122,16 @@ export default function Home() {
             ))}
           </div>
           {session ? (
-            <InteractiveHoverButton className="border border-gray-200 px-6 py-3 shadow-sm rounded-xl text-blue-900 text-2xl font-normal cursor-pointer" onClick={() => router.push("/student")}>
-              Начать подготовку
-            </InteractiveHoverButton>
+            <div className="flex flex-row gap-x-4">
+              <InteractiveHoverButton className="border border-gray-200 px-6 py-3 shadow-sm rounded-xl text-blue-900 text-2xl font-normal cursor-pointer" onClick={() => router.push("/student")}>
+                Начать подготовку
+              </InteractiveHoverButton>
+              {!loading && isAdmin && (
+                <InteractiveHoverButton className="border border-gray-200 px-6 py-3 shadow-sm rounded-xl text-blue-900 text-2xl font-normal cursor-pointer" onClick={() => router.push("/admin")}>
+                  Админ-панель
+                </InteractiveHoverButton>
+              )}
+            </div>
           ) : (
             <InteractiveHoverButton className="border border-gray-200 px-6 py-3 shadow-sm rounded-xl text-blue-900 text-2xl font-normal cursor-pointer" onClick={() => router.push("/auth")}>
               Войти в систему
