@@ -32,3 +32,19 @@ export interface TestCreateData {
   passingScore: number;
   isPublished: boolean;
 }
+
+export interface TestResult {
+  _id?: string;
+  testId: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  mode: 'exam' | 'training';
+  score: number;
+  totalQuestions: number;
+  percentage: number;
+  answers: (number | null)[];
+  timeSpent: number;
+  completedAt: Date;
+  createdAt: Date;
+}

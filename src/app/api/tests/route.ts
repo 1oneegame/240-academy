@@ -8,7 +8,7 @@ export async function GET() {
   try {
     const client = await clientPromise;
     const db = client.db("240academy");
-    const tests = await db.collection('tests').find({}).toArray();
+    const tests = await db.collection('tests').find({}).sort({ createdAt: -1 }).toArray();
     
     return NextResponse.json(tests);
   } catch (error) {

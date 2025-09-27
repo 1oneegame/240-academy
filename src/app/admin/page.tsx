@@ -246,6 +246,32 @@ export default function AdminPanel() {
     }
   };
 
+  const toggleTestPublish = async (test: Test) => {
+    try {
+      const response = await fetch(`/api/tests/${test._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...test,
+          isPublished: !test.isPublished
+        })
+      });
+
+      if (response.ok) {
+        setTests(tests.map(t => 
+          t._id === test._id ? { ...t, isPublished: !t.isPublished } : t
+        ));
+      } else {
+        alert('Ошибка при изменении статуса публикации');
+      }
+    } catch (error) {
+      console.error('Error updating test:', error);
+      alert('Ошибка при изменении статуса публикации');
+    }
+  };
+
   const renderTests = () => (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -276,10 +302,20 @@ export default function AdminPanel() {
                   </div>
                   <div className="flex space-x-2">
                     <button 
-                      className="bg-green-100 text-green-800 px-3 py-1 rounded hover:bg-green-200 transition-colors"
+                      className="bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200 transition-colors"
                       onClick={() => router.push(`/admin/tests/${test._id}/edit`)}
                     >
                       Редактировать
+                    </button>
+                    <button 
+                      className={`px-3 py-1 rounded transition-colors ${
+                        test.isPublished 
+                          ? 'bg-orange-100 text-orange-800 hover:bg-orange-200' 
+                          : 'bg-green-100 text-green-800 hover:bg-green-200'
+                      }`}
+                      onClick={() => toggleTestPublish(test)}
+                    >
+                      {test.isPublished ? 'Снять с публикации' : 'Опубликовать'}
                     </button>
                     <button 
                       className="bg-red-100 text-red-800 px-3 py-1 rounded hover:bg-red-200 transition-colors"
