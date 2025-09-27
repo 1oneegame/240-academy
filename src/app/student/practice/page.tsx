@@ -404,7 +404,7 @@ export default function PracticePage() {
                 </p>
                 
                 <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm mb-8">
-                  <div className="text-6xl font-bold text-blue-600 mb-4">
+                  <div className="text-6xl font-bold text-blue-800 mb-4">
                     {score}/{selectedTest.questions.length}
                   </div>
                   <div className="text-2xl text-gray-700 mb-2">Правильных ответов</div>
@@ -427,7 +427,7 @@ export default function PracticePage() {
                     return (
                       <div key={index} className={cn(
                         "p-6 rounded-xl border-2",
-                        isCorrect ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"
+                        isCorrect ? "border-blue-200 bg-blue-50" : "border-red-200 bg-red-50"
                       )}>
                         <div className="flex items-start justify-between mb-4">
                           <h3 className="text-lg font-semibold text-gray-900 flex-1 mr-4">
@@ -435,7 +435,7 @@ export default function PracticePage() {
                           </h3>
                           <div className={cn(
                             "flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium",
-                            isCorrect ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                            isCorrect ? "bg-blue-100 text-blue-800" : "bg-red-100 text-red-800"
                           )}>
                             {isCorrect ? (
                               <>
@@ -458,7 +458,7 @@ export default function PracticePage() {
                               className={cn(
                                 "p-3 rounded-lg border",
                                 optionIndex === question.correctAnswer
-                                  ? "border-green-500 bg-green-100 text-green-800"
+                                  ? "border-blue-500 bg-blue-100 text-blue-800"
                                   : optionIndex === userAnswer
                                   ? "border-red-500 bg-red-100 text-red-800"
                                   : "border-gray-200 bg-gray-50 text-gray-600"
@@ -497,7 +497,7 @@ export default function PracticePage() {
               <div className="flex justify-center gap-4">
                 <button
                   onClick={resetToSelection}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+                  className="px-6 py-3 bg-blue-800 text-white rounded-xl hover:bg-blue-900 transition-colors font-medium"
                 >
                   Выбрать другой тест
                 </button>

@@ -29,6 +29,20 @@ export default function TestInterface({ test, onFinish, onExit, mode }: TestInte
   }, [test.timeLimit]);
 
   useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = 'Ваш прогресс будет потерян при перезагрузке страницы. Вы уверены, что хотите покинуть тест?';
+      return 'Ваш прогресс будет потерян при перезагрузке страницы. Вы уверены, что хотите покинуть тест?';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
+
+  useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isTimerActive && timeLeft > 0) {
       interval = setInterval(() => {
@@ -230,7 +244,7 @@ export default function TestInterface({ test, onFinish, onExit, mode }: TestInte
           
           <button
             onClick={finishTest}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            className="bg-blue-800 hover:bg-blue-900 text-white px-4 py-2 rounded-lg font-medium transition-colors"
           >
             Сдать
           </button>
@@ -261,7 +275,7 @@ export default function TestInterface({ test, onFinish, onExit, mode }: TestInte
                       className={cn(
                         "w-full p-4 text-left rounded-lg border-2 transition-all duration-200",
                         {
-                          "border-blue-500 bg-blue-50 text-blue-900": selectedAnswer === index && (!showResult || mode === 'exam'),
+                          "border-blue-800 bg-blue-50 text-blue-900": selectedAnswer === index && (!showResult || mode === 'exam'),
                           "border-gray-200 hover:border-gray-300 hover:bg-gray-50": selectedAnswer !== index && (!showResult || mode === 'exam'),
                           "border-green-500 bg-green-50 text-green-800": showResult && mode === 'training' && index === currentQuestion.correctAnswer,
                           "border-red-500 bg-red-50 text-red-800": showResult && mode === 'training' && selectedAnswer === index && index !== currentQuestion.correctAnswer,
@@ -319,9 +333,9 @@ export default function TestInterface({ test, onFinish, onExit, mode }: TestInte
                   className={cn(
                     "w-10 h-10 rounded-lg border-2 font-medium transition-colors",
                     index === currentQuestionIndex
-                      ? "bg-blue-600 border-blue-600 text-white"
+                      ? "bg-blue-800 border-blue-800 text-white"
                       : answers[index] !== null
-                      ? "bg-green-100 border-green-300 text-green-800"
+                      ? "bg-blue-100 border-blue-300 text-blue-800"
                       : "bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200"
                   )}
                 >
@@ -371,7 +385,7 @@ export default function TestInterface({ test, onFinish, onExit, mode }: TestInte
                 "flex-1 py-3 px-4 rounded-lg font-medium transition-colors flex items-center justify-center gap-2",
                 selectedAnswer === null
                   ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-blue-800 text-white hover:bg-blue-900"
               )}
             >
               {currentQuestionIndex < test.questions.length - 1 ? 'Вперед' : 'Завершить'}
