@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import clientPromise from '@/lib/dbConnect';
-import bcrypt from 'bcryptjs';
 
 export const runtime = 'nodejs';
 
@@ -39,6 +38,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Пароль должен содержать минимум 6 символов' }, { status: 400 });
     }
 
+    const bcrypt = await import('bcryptjs');
     const hashedPassword = await bcrypt.hash(password, 12);
 
     const result = await db.collection('user').updateOne(
