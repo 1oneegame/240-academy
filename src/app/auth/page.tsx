@@ -55,7 +55,7 @@ const AuthPage: React.FC = () => {
 
         setIsSuccess(true);
         setTimeout(() => {
-          router.push('/student');
+          window.location.href = '/student';
         }, 800);
       } else {
         const result = await authClient.signUp.email({
@@ -70,7 +70,7 @@ const AuthPage: React.FC = () => {
 
         setIsSuccess(true);
         setTimeout(() => {
-          router.push('/student');
+          window.location.href = '/student';
         }, 800);
       }
 
