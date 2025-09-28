@@ -12,11 +12,11 @@ async function createAuth() {
             additionalFields: {
                 phone: {
                     type: "string",
-                    required: true,
+                    required: false,
                 },
                 surname: {
                     type: "string",
-                    required: true,
+                    required: false,
                 },
                 role: {
                     type: "string",
