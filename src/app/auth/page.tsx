@@ -30,7 +30,7 @@ const AuthPage: React.FC = () => {
       }
 
       if (!isLogin) {
-        if (!firstName || !lastName || !whatsappNumber || !confirmPassword) {
+        if (!firstName || !lastName || !confirmPassword) {
           throw new Error('Пожалуйста, заполните все поля');
         }
         
@@ -168,7 +168,6 @@ const AuthPage: React.FC = () => {
                         autoComplete="tel"
                         value={whatsappNumber}
                         onChange={(e) => setWhatsappNumber(e.target.value)}
-                        required
                         placeholder="+7..."
                         className="appearance-none block w-full px-3 py-2 border border-input rounded-md shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring sm:text-sm bg-background text-foreground"
                       />

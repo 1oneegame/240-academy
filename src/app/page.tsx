@@ -1,9 +1,9 @@
 "use client";
-import Link from "next/link";
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { useState, useEffect } from "react";
+import Footer from "@/components/Footer";
 
 export default function Home() {
   const { data: session } = useSession();
@@ -139,19 +139,7 @@ export default function Home() {
           )}
         </div>
       </section>
-      <footer className="bg-black flex flex-col px-16 pt-16"> 
-          <h2 className="text-xl font-semibold text-gray-100 pb-4">240Academy</h2>
-          <div className="flex flex-col text-gray-100 pb-4 w-fit">
-            <Link href="https://t.me/240Academy">Telegram</Link>
-            <Link href="https://www.instagram.com/240academy/">Instagram</Link>
-            <Link href="https://www.facebook.com/240academy">Facebook</Link>
-            <Link href="https://twitter.com/240academy">Twitter</Link>
-            <Link href="https://www.linkedin.com/company/240academy">LinkedIn</Link>
-            <Link href="https://www.youtube.com/channel/UC240Academy">YouTube</Link>
-            <Link href="https://github.com/240academy">GitHub</Link>
-          </div>
-          <p className="text-md font-light text-gray-100 pb-4">2025 240Academy</p>
-      </footer>
+      <Footer />
     </div>
   );
 }
