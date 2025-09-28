@@ -6,13 +6,14 @@ import { ResourceUpdateData } from '@/types/resource';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const client = await clientPromise;
     const db = client.db("240academy");
     
-    const resource = await db.collection('resources').findOne({ _id: new ObjectId(params.id) });
+    const resource = await db.collection('resources').findOne({ _id: new ObjectId(id) });
     
     if (!resource) {
       return NextResponse.json(
@@ -33,9 +34,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await requireAdmin(request);
 
     const client = await clientPromise;
@@ -49,7 +51,7 @@ export async function PUT(
     };
     
     const result = await db.collection('resources').findOneAndUpdate(
-      { _id: new ObjectId(params.id) },
+      { _id: new ObjectId(id) },
       { $set: updateData },
       { returnDocument: 'after' }
     );
@@ -89,15 +91,16 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await requireAdmin(request);
 
     const client = await clientPromise;
     const db = client.db("240academy");
     
-    const result = await db.collection('resources').findOneAndDelete({ _id: new ObjectId(params.id) });
+    const result = await db.collection('resources').findOneAndDelete({ _id: new ObjectId(id) });
     
     if (!result) {
       return NextResponse.json(

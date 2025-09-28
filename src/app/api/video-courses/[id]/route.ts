@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { use } from 'react';
 import clientPromise from '@/lib/dbConnect';
-import { VideoCourse, VideoCourseUpdateData } from '@/types/video-course';
+import { VideoCourseUpdateData } from '@/types/video-course';
 import { ObjectId } from 'mongodb';
 
 export const runtime = 'nodejs';
@@ -21,7 +20,7 @@ export async function GET(
     }
     
     return NextResponse.json(videoCourse);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch video course' }, { status: 500 });
   }
 }
@@ -36,8 +35,9 @@ export async function PUT(
     const client = await clientPromise;
     const db = client.db("240academy");
     
-    const { _id, ...bodyWithoutId } = body as any;
-    const updateData: any = {
+    const { _id, ...bodyWithoutId } = body as Record<string, unknown>;
+    void _id;
+    const updateData: Record<string, unknown> = {
       ...bodyWithoutId,
       updatedAt: new Date()
     };
@@ -45,7 +45,7 @@ export async function PUT(
     if (body.lessons) {
       updateData.lessons = body.lessons.map((lesson, index) => ({
         ...lesson,
-        id: (lesson as any).id || 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        id: (lesson as Record<string, unknown>).id || 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
           const r = Math.random() * 16 | 0;
           const v = c == 'x' ? r : (r & 0x3 | 0x8);
           return v.toString(16);
@@ -64,7 +64,7 @@ export async function PUT(
     }
     
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to update video course' }, { status: 500 });
   }
 }
@@ -85,7 +85,7 @@ export async function DELETE(
     }
     
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to delete video course' }, { status: 500 });
   }
 }

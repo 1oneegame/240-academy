@@ -5,6 +5,7 @@ import { BackToHomeButton } from '@/components/BackToHomeButton';
 import { VideoPlayer } from '@/components/VideoPlayer';
 import { VideoCourse, VideoLesson } from '@/types/video-course';
 import { Play, CheckCircle, Clock, BookOpen } from 'lucide-react';
+import Image from 'next/image';
 
 export default function VideoCoursesPage() {
   const [videoCourses, setVideoCourses] = useState<VideoCourse[]>([]);
@@ -248,10 +249,12 @@ export default function VideoCoursesPage() {
                 className="group relative flex flex-col border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer bg-white"
               >
                 <div className="aspect-video bg-gray-200 rounded-lg mb-4 overflow-hidden">
-                  <img 
+                  <Image 
                     src={course.thumbnail} 
                     alt={course.title}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    width={400}
+                    height={225}
                   />
                 </div>
                 

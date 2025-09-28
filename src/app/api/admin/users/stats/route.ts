@@ -4,7 +4,7 @@ import { UserStats } from '@/types/user';
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAdmin(request);
+    await requireAdmin(request);
 
     const client = await import('@/lib/dbConnect').then(m => m.default);
     const db = client.db("240academy");
@@ -38,8 +38,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(stats);
 
-  } catch (error) {
-    console.error('Error fetching user stats:', error);
+  } catch {
+    console.error('Error fetching user stats');
     return NextResponse.json(
       { error: 'Ошибка при получении статистики пользователей' },
       { status: 500 }

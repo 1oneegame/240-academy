@@ -70,14 +70,6 @@ export default function CriticalThinkingTestPage() {
     }
   };
 
-  const openModeModal = () => {
-    setShowModeModal(true);
-    setError(null);
-  };
-
-  const closeModeModal = () => {
-    setShowModeModal(false);
-  };
 
   const startTest = (modeType: 'exam' | 'training') => {
     setMode(modeType);

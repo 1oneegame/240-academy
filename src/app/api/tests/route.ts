@@ -11,7 +11,7 @@ export async function GET() {
     const tests = await db.collection('tests').find({}).sort({ createdAt: -1 }).toArray();
     
     return NextResponse.json(tests);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch tests' }, { status: 500 });
   }
 }
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     
     const testData: Omit<Test, '_id'> = {
       ...body,
-      questions: body.questions.map((question, index) => ({
+      questions: body.questions.map((question) => ({
         ...question,
         id: 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
           const r = Math.random() * 16 | 0;
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       success: true, 
       testId: result.insertedId 
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to create test' }, { status: 500 });
   }
 }

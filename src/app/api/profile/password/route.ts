@@ -60,7 +60,7 @@ export async function PUT(request: NextRequest) {
       message: 'Пароль изменен'
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Ошибка сервера при изменении пароля' },
       { status: 500 }

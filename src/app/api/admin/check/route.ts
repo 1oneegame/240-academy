@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import clientPromise from '@/lib/dbConnect';
-import { ObjectId } from 'mongodb';
 
 export const runtime = 'nodejs';
 
@@ -48,7 +47,7 @@ export async function GET(request: NextRequest) {
         email: user.email
       }
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ isAdmin: false, error: 'Failed to check admin status' }, { status: 500 });
   }
 }

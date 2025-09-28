@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react';
 import { ProtectedRoute } from '@/components/protected-route';
 import { BackToHomeButton } from '@/components/BackToHomeButton';
 import TestInterface from '@/components/TestInterface';
-import { Test, Question, TestResult } from '@/types/test';
-import { Play, CheckCircle, Clock, BookOpen, ArrowLeft, ArrowRight, Target, Brain, RotateCcw } from 'lucide-react';
+import { Test } from '@/types/test';
+import { Play, CheckCircle, BookOpen, Target, Brain, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import { useSession } from '@/lib/auth-client';
@@ -70,11 +70,6 @@ export default function PracticePage() {
   };
 
 
-  const getRandomTest = (): Test | null => {
-    if (!tests || tests.length === 0) return null;
-    const randomIndex = Math.floor(Math.random() * tests.length);
-    return tests[randomIndex];
-  };
 
   const openModeModal = (test: Test) => {
     setTestForModal(test);
@@ -197,7 +192,7 @@ export default function PracticePage() {
             {tests.length > 0 && (
               <div className="max-w-6xl mx-auto">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                  {tests.map((test, index) => (
+                  {tests.map((test) => (
                     <div 
                       key={test._id} 
                       onClick={() => openModeModal(test)}

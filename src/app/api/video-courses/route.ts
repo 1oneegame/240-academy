@@ -11,7 +11,7 @@ export async function GET() {
     const videoCourses = await db.collection('video-courses').find({}).sort({ createdAt: -1 }).toArray();
     
     return NextResponse.json(videoCourses);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch video courses' }, { status: 500 });
   }
 }
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       success: true, 
       videoCourseId: result.insertedId 
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to create video course' }, { status: 500 });
   }
 }

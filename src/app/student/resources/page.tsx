@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { BackToHomeButton } from '@/components/BackToHomeButton';
 import { ProtectedRoute } from '@/components/protected-route';
 import { Resource } from '@/types/resource';
-import { ExternalLink, Calendar, Folder } from 'lucide-react';
+import { ExternalLink, Folder } from 'lucide-react';
 import { ResourceIcon } from '@/components/ResourceIcon';
 
 export default function ResourcesPage() {
@@ -55,18 +55,6 @@ export default function ResourcesPage() {
   };
 
 
-  const formatDate = (date: string | Date) => {
-    try {
-      const dateObj = typeof date === 'string' ? new Date(date) : date;
-      return dateObj.toLocaleDateString('ru-RU', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    } catch (error) {
-      return 'Дата не указана';
-    }
-  };
 
   const categories = ['all', ...Array.from(new Set(resources.map(r => r.category)))];
   

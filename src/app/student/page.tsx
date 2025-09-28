@@ -13,9 +13,9 @@ export default function StudentPage() {
 
     const student = {
         name: session?.user?.name || "Пользователь",
-        surname: (session?.user as any)?.surname || "",
+        surname: (session?.user as Record<string, unknown>)?.surname || "",
         email: session?.user?.email || "user@example.com",
-        phone: (session?.user as any)?.phone || "+7 (707) 123-4567",
+        phone: (session?.user as Record<string, unknown>)?.phone || "+7 (707) 123-4567",
     }
     const sections = [
         {
@@ -66,7 +66,7 @@ export default function StudentPage() {
                         onClick={() => router.push('/student/profile')}
                     />
                     <div className="flex flex-col mr-1 cursor-pointer" onClick={() => router.push('/student/profile')}>
-                        <h2 className="text-xl font-semibold text-blue-900 hover:text-blue-700 transition-colors">{student.name} {student.surname}</h2>
+                        <h2 className="text-xl font-semibold text-blue-900 hover:text-blue-700 transition-colors">{student.name} {student.surname ? ` ${student.surname}` : ''}</h2>
                         <p className="text-lg font-light text-gray-900">{student.email}</p>
                     </div>
                     <QuitButton

@@ -2,8 +2,9 @@
 import { useState, useEffect } from 'react';
 import { ProtectedRoute } from '@/components/protected-route';
 import { BackToHomeButton } from '@/components/BackToHomeButton';
-import { VideoCourse, VideoLesson } from '@/types/video-course';
+import { VideoCourse } from '@/types/video-course';
 import { Plus, Edit, Trash2, Eye, EyeOff, Clock, BookOpen } from 'lucide-react';
+import Image from 'next/image';
 
 export default function AdminVideoCoursesPage() {
   const [videoCourses, setVideoCourses] = useState<VideoCourse[]>([]);
@@ -126,10 +127,12 @@ export default function AdminVideoCoursesPage() {
                 className="group relative flex flex-col border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 bg-white"
               >
                 <div className="aspect-video bg-gray-200 rounded-lg mb-4 overflow-hidden">
-                  <img 
+                  <Image 
                     src={course.thumbnail} 
                     alt={course.title}
                     className="w-full h-full object-cover"
+                    width={400}
+                    height={225}
                   />
                 </div>
                 
@@ -403,7 +406,7 @@ function VideoCourseEditor({
               </label>
               <select
                 value={formData.level}
-                onChange={(e) => setFormData({ ...formData, level: e.target.value as any })}
+                onChange={(e) => setFormData({ ...formData, level: e.target.value as 'beginner' | 'intermediate' | 'advanced' })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="beginner">Начинающий</option>

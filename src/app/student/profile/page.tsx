@@ -36,15 +36,15 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile>({
     name: session?.user?.name || "",
     email: session?.user?.email || "",
-    phone: (session?.user as any)?.phone || "",
-    surname: (session?.user as any)?.surname || ""
+    phone: String((session?.user as Record<string, unknown>)?.phone || ""),
+    surname: String((session?.user as Record<string, unknown>)?.surname || "")
   });
   const [isEditing, setIsEditing] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [selectedResult, setSelectedResult] = useState<TestResult | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [testDetails, setTestDetails] = useState<any>(null);
+  const [testDetails, setTestDetails] = useState<Record<string, unknown> | null>(null);
   const [loadingTestDetails, setLoadingTestDetails] = useState(false);
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export default function ProfilePage() {
         const results = await response.json();
         setTestResults(results);
       }
-    } catch (error) {
+    } catch {
       toast.error('Ошибка загрузки результатов тестов');
     } finally {
       setLoading(false);
@@ -82,7 +82,7 @@ export default function ProfilePage() {
       } else {
         toast.error('Ошибка обновления профиля');
       }
-    } catch (error) {
+    } catch {
       toast.error('Ошибка обновления профиля');
     }
   };
@@ -114,7 +114,7 @@ export default function ProfilePage() {
       } else {
         toast.error('Ошибка изменения пароля');
       }
-    } catch (error) {
+    } catch {
       toast.error('Ошибка изменения пароля');
     }
   };
@@ -151,7 +151,7 @@ export default function ProfilePage() {
         const test = await response.json();
         setTestDetails(test);
       }
-    } catch (error) {
+    } catch {
       toast.error('Ошибка загрузки деталей теста');
     } finally {
       setLoadingTestDetails(false);
@@ -614,16 +614,16 @@ export default function ProfilePage() {
                   <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
                     <h4 className="text-lg font-semibold text-gray-900 mb-4">Вопросы и ответы</h4>
                     <div className="space-y-4">
-                      {testDetails.questions.map((question: any, index: number) => {
+                      {Array.isArray(testDetails.questions) && testDetails.questions.map((question: Record<string, unknown>, index: number) => {
                         const userAnswer = selectedResult.answers[index];
                         const isCorrect = userAnswer === question.correctAnswer;
                         const hasAnswer = userAnswer !== null;
                         
                         return (
-                          <div key={question.id} className="border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200">
+                          <div key={String(question.id || index)} className="border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200">
                             <div className="flex items-start justify-between mb-3">
                               <h5 className="text-base font-medium text-gray-900 flex-1">
-                                Вопрос {index + 1}: {question.question}
+                                Вопрос {index + 1}: {String(question.question || '')}
                               </h5>
                               <div className="flex items-center gap-2 ml-4">
                                 {hasAnswer ? (
@@ -639,7 +639,7 @@ export default function ProfilePage() {
                             </div>
                             
                             <div className="space-y-2">
-                              {question.options.map((option: string, optionIndex: number) => {
+                              {Array.isArray(question.options) && question.options.map((option: string, optionIndex: number) => {
                                 const isUserChoice = userAnswer === optionIndex;
                                 const isCorrectOption = question.correctAnswer === optionIndex;
                                 
@@ -676,10 +676,10 @@ export default function ProfilePage() {
                               })}
                             </div>
                             
-                            {question.explanation && (
+                            {Boolean(question.explanation) && (
                               <div className="mt-3 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl shadow-sm">
                                 <p className="text-sm text-blue-800">
-                                  <strong>Объяснение:</strong> {question.explanation}
+                                  <strong>Объяснение:</strong> {String(question.explanation || '')}
                                 </p>
                               </div>
                             )}

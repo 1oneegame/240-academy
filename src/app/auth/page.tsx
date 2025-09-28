@@ -18,16 +18,6 @@ const AuthPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
 
-  const resetForm = () => {
-    setEmail('');
-    setPassword('');
-    setFirstName('');
-    setLastName('');
-    setWhatsappNumber('');
-    setConfirmPassword('');
-    setError('');
-    setIsSuccess(false);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,9 +61,7 @@ const AuthPage: React.FC = () => {
         const result = await authClient.signUp.email({
           email: email,
           password: password,
-          name: firstName,
-          surname: lastName,
-          phone: whatsappNumber,
+          name: `${firstName} ${lastName}`,
         });
 
         if (result.error) {
@@ -86,8 +74,8 @@ const AuthPage: React.FC = () => {
         }, 800);
       }
 
-    } catch (err: any) {
-      setError(err?.message || 'Произошла ошибка. Пожалуйста, попробуйте снова.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Произошла ошибка. Пожалуйста, попробуйте снова.');
     } finally {
       setIsLoading(false);
     }
@@ -331,8 +319,8 @@ const AuthPage: React.FC = () => {
                     } else {
                       router.push('/student');
                     }
-                  } catch (err: any) {
-                    setError(err?.message || 'Ошибка входа через Google');
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : 'Ошибка входа через Google');
                   }
                 }}
                 className="w-full inline-flex justify-center py-2 px-4 border border-input rounded-md shadow-sm bg-background text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"

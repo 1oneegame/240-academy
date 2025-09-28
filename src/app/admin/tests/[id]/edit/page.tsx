@@ -1,10 +1,10 @@
 "use client";
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { ProtectedRoute } from '@/components/protected-route';
 import { BackToHomeButton } from '@/components/BackToHomeButton';
-import { Test, Question, TestCreateData } from '@/types/test';
-import { Plus, Trash2, Save, Target, BookOpen } from 'lucide-react';
+import { Test, Question } from '@/types/test';
+import { Plus, Trash2, BookOpen } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function EditTestPage({ params }: { params: Promise<{ id: string }> }) {
@@ -26,14 +26,9 @@ export default function EditTestPage({ params }: { params: Promise<{ id: string 
     updatedAt: new Date(),
     createdBy: ''
   });
-  const [editingQuestion, setEditingQuestion] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<'info' | 'questions'>('info');
 
-  useEffect(() => {
-    fetchTest();
-  }, [id]);
-
-  const fetchTest = async () => {
+  const fetchTest = useCallback(async () => {
     try {
       const response = await fetch(`/api/tests/${id}`);
       if (response.ok) {
@@ -50,9 +45,13 @@ export default function EditTestPage({ params }: { params: Promise<{ id: string 
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, router]);
 
-  const handleInputChange = (field: keyof Test, value: any) => {
+  useEffect(() => {
+    fetchTest();
+  }, [id, fetchTest]);
+
+  const handleInputChange = (field: keyof Test, value: string | number | boolean) => {
     setTestData(prev => ({
       ...prev,
       [field]: value
@@ -77,11 +76,10 @@ export default function EditTestPage({ params }: { params: Promise<{ id: string 
       ...prev,
       questions: [...prev.questions, newQuestion]
     }));
-    setEditingQuestion(testData.questions.length);
     toast.success('Вопрос добавлен');
   };
 
-  const updateQuestion = (questionIndex: number, field: keyof Question, value: any) => {
+  const updateQuestion = (questionIndex: number, field: keyof Question, value: string | number) => {
     setTestData(prev => ({
       ...prev,
       questions: prev.questions.map((q, i) => 

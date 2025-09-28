@@ -5,7 +5,9 @@ import { cn } from "@/lib/utils";
 import { signOut } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 
-interface QuitButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {}
+interface QuitButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "default" | "destructive";
+}
 
 export const QuitButton = React.forwardRef<HTMLButtonElement, QuitButtonProps>(
   ({ className, onClick, ...props }, ref) => {

@@ -1,9 +1,9 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ProtectedRoute } from '@/components/protected-route';
 import { BackToHomeButton } from '@/components/BackToHomeButton';
 import { Test, Question } from '@/types/test';
-import { ArrowLeft, ArrowRight, Clock, CheckCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import { useSession } from '@/lib/auth-client';
@@ -27,102 +27,23 @@ export default function TestInterfacePage() {
     fetchTest();
   }, []);
 
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isTimerActive && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft(prev => {
-          if (prev <= 1) {
-            handleTimeUp();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isTimerActive]);
-
-  const fetchTest = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await fetch('/api/tests');
-      
-      if (!response.ok) {
-        throw new Error('Ошибка загрузки тестов');
-      }
-      
-      const testsData = await response.json();
-      
-      if (Array.isArray(testsData) && testsData.length > 0) {
-        const publishedTests = testsData.filter((test: Test) => test.isPublished);
-        if (publishedTests.length > 0) {
-          setSelectedTest(publishedTests[0]);
-          setTimeLeft(publishedTests[0].timeLimit ? publishedTests[0].timeLimit * 60 : 3600);
-          setIsTimerActive(true);
-          setAnswers(new Array(publishedTests[0].questions.length).fill(null));
-        } else {
-          setError('Опубликованных тестов пока нет');
+  const calculateScore = useCallback((): number => {
+    if (!selectedTest || !selectedTest.questions || !answers) return 0;
+    
+    let correct = 0;
+    answers.forEach((answer, index) => {
+      if (answer !== null && index < selectedTest.questions.length) {
+        const question = selectedTest.questions[index];
+        if (question && typeof answer === 'number' && answer === question.correctAnswer) {
+          correct++;
         }
-      } else {
-        setError('Неверный формат данных от сервера');
       }
-      
-    } catch (error) {
-      console.error('Error fetching test:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
-      setError(`Не удалось загрузить тест: ${errorMessage}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const handleTimeUp = () => {
-    setIsTimerActive(false);
-    finishTest();
-  };
-
-  const handleAnswerSelect = (answerIndex: number) => {
-    if (!currentQuestion || answerIndex < 0 || answerIndex >= currentQuestion.options.length) {
-      return;
-    }
+    });
     
-    setSelectedAnswer(answerIndex);
-    
-    const newAnswers = [...answers];
-    newAnswers[currentQuestionIndex] = answerIndex;
-    setAnswers(newAnswers);
-  };
+    return correct;
+  }, [answers, selectedTest]);
 
-  const handleNextQuestion = () => {
-    if (currentQuestionIndex < (selectedTest?.questions.length || 0) - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setSelectedAnswer(answers[currentQuestionIndex + 1]);
-    } else {
-      finishTest();
-    }
-  };
-
-  const handlePreviousQuestion = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
-      setSelectedAnswer(answers[currentQuestionIndex - 1]);
-    }
-  };
-
-  const handleQuestionJump = (questionIndex: number) => {
-    setCurrentQuestionIndex(questionIndex);
-    setSelectedAnswer(answers[questionIndex]);
-  };
-
-  const finishTest = async (forceFinish = false) => {
+  const finishTest = useCallback(async (forceFinish = false) => {
     const unansweredQuestions = answers.filter(answer => answer === null).length;
     
     if (!forceFinish && unansweredQuestions > 0) {
@@ -173,22 +94,101 @@ export default function TestInterfacePage() {
     }
     
     toast.success(`Тест завершен! Вы набрали ${percentage}%`);
+  }, [answers, selectedTest, calculateScore, session?.user]);
+
+  const handleTimeUp = useCallback(() => {
+    setIsTimerActive(false);
+    finishTest();
+  }, [finishTest]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isTimerActive && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            handleTimeUp();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isTimerActive, timeLeft, handleTimeUp]);
+
+  const fetchTest = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch('/api/tests');
+      
+      if (!response.ok) {
+        throw new Error('Ошибка загрузки тестов');
+      }
+      
+      const testsData = await response.json();
+      
+      if (Array.isArray(testsData) && testsData.length > 0) {
+        const publishedTests = testsData.filter((test: Test) => test.isPublished);
+        if (publishedTests.length > 0) {
+          setSelectedTest(publishedTests[0]);
+          setTimeLeft(publishedTests[0].timeLimit ? publishedTests[0].timeLimit * 60 : 3600);
+          setIsTimerActive(true);
+          setAnswers(new Array(publishedTests[0].questions.length).fill(null));
+        } else {
+          setError('Опубликованных тестов пока нет');
+        }
+      } else {
+        setError('Неверный формат данных от сервера');
+      }
+      
+    } catch (error) {
+      console.error('Error fetching test:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+      setError(`Не удалось загрузить тест: ${errorMessage}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const calculateScore = (): number => {
-    if (!selectedTest || !selectedTest.questions || !answers) return 0;
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleAnswerSelect = (answerIndex: number) => {
+    if (!currentQuestion || answerIndex < 0 || answerIndex >= currentQuestion.options.length) {
+      return;
+    }
     
-    let correct = 0;
-    answers.forEach((answer, index) => {
-      if (answer !== null && index < selectedTest.questions.length) {
-        const question = selectedTest.questions[index];
-        if (question && typeof answer === 'number' && answer === question.correctAnswer) {
-          correct++;
-        }
-      }
-    });
+    setSelectedAnswer(answerIndex);
     
-    return correct;
+    const newAnswers = [...answers];
+    newAnswers[currentQuestionIndex] = answerIndex;
+    setAnswers(newAnswers);
+  };
+
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex < (selectedTest?.questions.length || 0) - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+      setSelectedAnswer(answers[currentQuestionIndex + 1]);
+    } else {
+      finishTest();
+    }
+  };
+
+  const handlePreviousQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+      setSelectedAnswer(answers[currentQuestionIndex - 1]);
+    }
+  };
+
+  const handleQuestionJump = (questionIndex: number) => {
+    setCurrentQuestionIndex(questionIndex);
+    setSelectedAnswer(answers[questionIndex]);
   };
 
   const getCurrentQuestion = (): Question | null => {

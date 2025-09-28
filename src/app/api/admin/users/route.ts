@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthenticatedUser, requireAdmin } from '@/lib/auth-utils';
-import { User as UserType } from '@/types/user';
+import { requireAdmin } from '@/lib/auth-utils';
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await requireAdmin(request);
+    await requireAdmin(request);
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
@@ -15,7 +14,7 @@ export async function GET(request: NextRequest) {
     const client = await import('@/lib/dbConnect').then(m => m.default);
     const db = client.db("240academy");
 
-    const query: any = {};
+    const query: Record<string, unknown> = {};
     
     if (search) {
       query.$or = [
@@ -74,7 +73,7 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const user = await requireAdmin(request);
+    await requireAdmin(request);
 
     const { userId, isActive, role } = await request.json();
 
@@ -85,7 +84,7 @@ export async function PUT(request: NextRequest) {
     const client = await import('@/lib/dbConnect').then(m => m.default);
     const db = client.db("240academy");
 
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (typeof isActive === 'boolean') updateData.isActive = isActive;
     if (role && ['user', 'admin'].includes(role)) updateData.role = role;
 

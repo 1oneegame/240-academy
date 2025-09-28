@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       resultId: result.insertedId 
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Ошибка сервера при сохранении результата' },
       { status: 500 }
@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(results);
 
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Ошибка сервера при получении результатов' },
       { status: 500 }

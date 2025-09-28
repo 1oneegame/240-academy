@@ -1,9 +1,8 @@
 "use client";
-import { useState, useEffect } from 'react';
-import { Test, Question } from '@/types/test';
+import { useState, useEffect, useCallback } from 'react';
+import { Test } from '@/types/test';
 import { Clock, ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import toast from 'react-hot-toast';
 import LatexRenderer from './LatexRenderer';
 
 interface TestInterfaceProps {
@@ -14,6 +13,7 @@ interface TestInterfaceProps {
 }
 
 export default function TestInterface({ test, onFinish, onExit, mode }: TestInterfaceProps) {
+  void onExit;
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [answers, setAnswers] = useState<(number | null)[]>(new Array(test.questions.length).fill(null));
@@ -21,12 +21,38 @@ export default function TestInterface({ test, onFinish, onExit, mode }: TestInte
   const [isTimerActive, setIsTimerActive] = useState(true);
   const [showResult, setShowResult] = useState(false);
 
+  const calculateScore = useCallback((): number => {
+    let correct = 0;
+    answers.forEach((answer, index) => {
+      if (answer !== null && index < test.questions.length) {
+        const question = test.questions[index];
+        if (question && typeof answer === 'number' && answer === question.correctAnswer) {
+          correct++;
+        }
+      }
+    });
+    return correct;
+  }, [answers, test.questions]);
+
+  const finishTest = useCallback(() => {
+    setIsTimerActive(false);
+    const score = calculateScore();
+    onFinish(score, answers);
+  }, [answers, onFinish, calculateScore]);
+
+  const handleTimeUp = useCallback(() => {
+    setIsTimerActive(false);
+    if (mode === 'exam') {
+      finishTest();
+    }
+  }, [mode, finishTest]);
+
   useEffect(() => {
     if (test.timeLimit > 0) {
       setTimeLeft(test.timeLimit * 60);
       setIsTimerActive(true);
     }
-  }, [test.timeLimit]);
+  }, [test.timeLimit, handleTimeUp]);
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -35,10 +61,22 @@ export default function TestInterface({ test, onFinish, onExit, mode }: TestInte
       return 'Ваш прогресс будет потерян при перезагрузке страницы. Вы уверены, что хотите покинуть тест?';
     };
 
+    const handlePopState = (e: PopStateEvent) => {
+      const confirmLeave = window.confirm('Ваш прогресс будет потерян при выходе с теста. Вы уверены, что хотите покинуть тест?');
+      if (!confirmLeave) {
+        e.preventDefault();
+        window.history.pushState(null, '', window.location.href);
+      }
+    };
+
     window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+    
+    window.history.pushState(null, '', window.location.href);
 
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
     };
   }, []);
 
@@ -56,19 +94,12 @@ export default function TestInterface({ test, onFinish, onExit, mode }: TestInte
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isTimerActive, timeLeft]);
+  }, [isTimerActive, timeLeft, handleTimeUp]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const handleTimeUp = () => {
-    setIsTimerActive(false);
-    if (mode === 'exam') {
-      finishTest();
-    }
   };
 
   const handleAnswerSelect = (answerIndex: number) => {
@@ -113,25 +144,6 @@ export default function TestInterface({ test, onFinish, onExit, mode }: TestInte
     setShowResult(false);
   };
 
-  const finishTest = () => {
-    setIsTimerActive(false);
-    const score = calculateScore();
-    onFinish(score, answers);
-  };
-
-  const calculateScore = (): number => {
-    let correct = 0;
-    answers.forEach((answer, index) => {
-      if (answer !== null && index < test.questions.length) {
-        const question = test.questions[index];
-        if (question && typeof answer === 'number' && answer === question.correctAnswer) {
-          correct++;
-        }
-      }
-    });
-    return correct;
-  };
-
   const currentQuestion = test.questions[currentQuestionIndex];
   const isCorrect = selectedAnswer !== null && currentQuestion && selectedAnswer === currentQuestion.correctAnswer;
   const answeredQuestions = answers.filter(answer => answer !== null).length;
@@ -140,12 +152,11 @@ export default function TestInterface({ test, onFinish, onExit, mode }: TestInte
     const latexRegex = /\$\$(.*?)\$\$/g;
     const inlineLatexRegex = /\$(.*?)\$/g;
     
-    let result = text;
     const parts = [];
     let lastIndex = 0;
     
     // Обработка блочных формул $$
-    result = result.replace(latexRegex, (match, formula, offset) => {
+    text.replace(latexRegex, (match, formula, offset) => {
       parts.push({
         type: 'text',
         content: text.slice(lastIndex, offset),

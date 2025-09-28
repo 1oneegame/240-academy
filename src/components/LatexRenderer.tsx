@@ -28,7 +28,7 @@ function fixEscapedLatex(latex: string): string {
     
     // Обрабатываем простые матрицы без окружений
     const simpleMatrixRegex = /\\left\[\\begin\{array\}\{([^}]+)\}([^\\]+)\\end\{array\}\\right\]/g;
-    fixedMath = fixedMath.replace(simpleMatrixRegex, (match, alignment, content) => {
+    fixedMath = fixedMath.replace(simpleMatrixRegex, (match: string, alignment: string, content: string) => {
       return `\\begin{pmatrix}${content}\\end{pmatrix}`;
     });
     
@@ -49,7 +49,7 @@ function fixEscapedLatex(latex: string): string {
     
     // Обрабатываем простые матрицы без окружений
     const simpleMatrixRegex = /\\left\[\\begin\{array\}\{([^}]+)\}([^\\]+)\\end\{array\}\\right\]/g;
-    fixedMath = fixedMath.replace(simpleMatrixRegex, (match, alignment, content) => {
+    fixedMath = fixedMath.replace(simpleMatrixRegex, (match: string, alignment: string, content: string) => {
       // Преобразуем простую матрицу в pmatrix
       return `\\begin{pmatrix}${content}\\end{pmatrix}`;
     });

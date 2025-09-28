@@ -2,8 +2,7 @@
 
 import { ProtectedRoute } from "@/components/protected-route";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import { Course } from "@/types/course";
+import { useState, useEffect, useCallback } from "react";
 import { Test } from "@/types/test";
 import { VideoCourse } from "@/types/video-course";
 import { Resource } from "@/types/resource";
@@ -12,13 +11,15 @@ import { User, UserStats } from "@/types/user";
 export default function AdminPanel() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [courses, setCourses] = useState<Course[]>([]);
   const [videoCourses, setVideoCourses] = useState<VideoCourse[]>([]);
   const [tests, setTests] = useState<Test[]>([]);
   const [resources, setResources] = useState<Resource[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<{
+    users?: { total: number };
+    tests?: { published: number };
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
@@ -28,17 +29,7 @@ export default function AdminPanel() {
   const [usersSearch, setUsersSearch] = useState('');
   const [usersRole, setUsersRole] = useState('');
 
-  useEffect(() => {
-    checkAdminAccess();
-  }, []);
-
-  useEffect(() => {
-    if (activeTab === 'users' && isAdmin) {
-      fetchUsers(1, usersSearch, usersRole);
-    }
-  }, [activeTab, isAdmin]);
-
-  const checkAdminAccess = async () => {
+  const checkAdminAccess = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/check');
       const data = await response.json();
@@ -53,13 +44,22 @@ export default function AdminPanel() {
       console.error('Error checking admin access:', error);
       setAccessDenied(true);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    checkAdminAccess();
+  }, [checkAdminAccess]);
+
+  useEffect(() => {
+    if (activeTab === 'users' && isAdmin) {
+      fetchUsers(1, usersSearch, usersRole);
+    }
+  }, [activeTab, isAdmin, usersSearch, usersRole]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [coursesRes, videoCoursesRes, testsRes, resourcesRes, statsRes, userStatsRes] = await Promise.all([
-        fetch('/api/courses'),
+      const [videoCoursesRes, testsRes, resourcesRes, statsRes, userStatsRes] = await Promise.all([
         fetch('/api/video-courses'),
         fetch('/api/tests'),
         fetch('/api/admin/resources'),
@@ -67,14 +67,12 @@ export default function AdminPanel() {
         fetch('/api/admin/users/stats')
       ]);
       
-      const coursesData = coursesRes.ok ? await coursesRes.json() : [];
       const videoCoursesData = videoCoursesRes.ok ? await videoCoursesRes.json() : [];
       const testsData = testsRes.ok ? await testsRes.json() : [];
       const resourcesData = resourcesRes.ok ? await resourcesRes.json() : [];
       const statsData = statsRes.ok ? await statsRes.json() : null;
       const userStatsData = userStatsRes.ok ? await userStatsRes.json() : null;
       
-      setCourses(Array.isArray(coursesData) ? coursesData : []);
       setVideoCourses(Array.isArray(videoCoursesData) ? videoCoursesData : []);
       setTests(Array.isArray(testsData) ? testsData : []);
       setResources(Array.isArray(resourcesData) ? resourcesData : []);
@@ -82,7 +80,6 @@ export default function AdminPanel() {
       setUserStats(userStatsData);
     } catch (error) {
       console.error('Error fetching data:', error);
-      setCourses([]);
       setVideoCourses([]);
       setTests([]);
       setResources([]);
@@ -163,7 +160,7 @@ export default function AdminPanel() {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900"></div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
@@ -176,28 +173,10 @@ export default function AdminPanel() {
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Опубликованные курсы</p>
-                <p className="text-2xl font-bold text-blue-900">{stats?.courses?.published || 0}</p>
-              </div>
-              <div className="text-3xl">🎥</div>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
                 <p className="text-sm font-medium text-gray-600">Опубликованные тесты</p>
                 <p className="text-2xl font-bold text-blue-900">{stats?.tests?.published || 0}</p>
               </div>
               <div className="text-3xl">📝</div>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Завершения курсов</p>
-                <p className="text-2xl font-bold text-blue-900">{stats?.completions || 0}</p>
-              </div>
-              <div className="text-3xl">📊</div>
             </div>
           </div>
         </div>
@@ -205,20 +184,6 @@ export default function AdminPanel() {
     </div>
   );
 
-  const handleDeleteCourse = async (courseId: string) => {
-    if (confirm('Вы уверены, что хотите удалить этот курс?')) {
-      try {
-        const response = await fetch(`/api/courses/${courseId}`, {
-          method: 'DELETE'
-        });
-        if (response.ok) {
-          fetchData();
-        }
-      } catch (error) {
-        console.error('Error deleting course:', error);
-      }
-    }
-  };
 
   const handleDeleteVideoCourse = async (videoCourseId: string) => {
     if (confirm('Вы уверены, что хотите удалить этот видеокурс?')) {
@@ -632,7 +597,6 @@ export default function AdminPanel() {
                         <span>Последний вход: {new Date(user.lastLoginAt).toLocaleDateString('ru-RU')}</span>
                       )}
                       <span>Тестов пройдено: {user.testResultsCount || 0}</span>
-                      <span>Курсов завершено: {user.completedCoursesCount || 0}</span>
                     </div>
                   </div>
                   <div className="flex space-x-2">

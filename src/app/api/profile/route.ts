@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       surname: user.surname
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Ошибка сервера при получении профиля' },
       { status: 500 }
@@ -83,7 +83,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Имя и email обязательны' }, { status: 400 });
     }
 
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       name,
       email,
       updatedAt: new Date()
@@ -106,7 +106,7 @@ export async function PUT(request: NextRequest) {
       message: 'Профиль обновлен'
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Ошибка сервера при обновлении профиля' },
       { status: 500 }

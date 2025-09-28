@@ -3,8 +3,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ProtectedRoute } from '@/components/protected-route';
 import { BackToHomeButton } from '@/components/BackToHomeButton';
-import { Test, Question, TestCreateData } from '@/types/test';
-import { Plus, Trash2, Save, Target, BookOpen } from 'lucide-react';
+import { Question, TestCreateData } from '@/types/test';
+import { Trash2, Target } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function CreateTestPage() {
@@ -23,7 +23,7 @@ export default function CreateTestPage() {
   const [editingQuestion, setEditingQuestion] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<'info' | 'questions'>('info');
 
-  const handleInputChange = (field: keyof TestCreateData, value: any) => {
+  const handleInputChange = (field: keyof TestCreateData, value: string | number | boolean) => {
     setTestData(prev => ({
       ...prev,
       [field]: value
@@ -47,7 +47,7 @@ export default function CreateTestPage() {
     toast.success('Вопрос добавлен');
   };
 
-  const updateQuestion = (index: number, field: keyof Omit<Question, 'id'>, value: any) => {
+  const updateQuestion = (index: number, field: keyof Omit<Question, 'id'>, value: string | number) => {
     setTestData(prev => ({
       ...prev,
       questions: prev.questions.map((q, i) => 
@@ -291,7 +291,7 @@ export default function CreateTestPage() {
                       <div className="text-center py-12 text-gray-500">
                         <Target className="w-16 h-16 mx-auto mb-4 text-gray-300" />
                         <p className="text-lg">Вопросы не добавлены</p>
-                        <p className="text-sm">Нажмите "Добавить вопрос" чтобы начать</p>
+                        <p className="text-sm">Нажмите &quot;Добавить вопрос&quot; чтобы начать</p>
                       </div>
                     ) : (
                       testData.questions.map((question, questionIndex) => (

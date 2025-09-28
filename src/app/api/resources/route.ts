@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth-utils';
 import clientPromise from '@/lib/dbConnect';
-import Resource from '@/models/Resource';
 import { ResourceCreateData } from '@/types/resource';
 
 export async function GET() {

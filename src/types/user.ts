@@ -7,7 +7,6 @@ export interface User {
   createdAt: string;
   lastLoginAt?: string;
   testResultsCount?: number;
-  completedCoursesCount?: number;
 }
 
 export interface UserStats {

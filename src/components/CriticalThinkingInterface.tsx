@@ -1,8 +1,7 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Clock, ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import toast from 'react-hot-toast';
 
 interface CriticalThinkingInterfaceProps {
   testTitle: string;
@@ -18,13 +17,15 @@ interface CriticalThinkingInterfaceProps {
 export default function CriticalThinkingInterface({ 
   testTitle, 
   pdfUrl, 
-  year, 
+  year,
   onFinish, 
-  onExit, 
+  onExit,
   mode, 
   timeLimit,
   correctAnswers 
 }: CriticalThinkingInterfaceProps) {
+  void year;
+  void onExit;
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [answers, setAnswers] = useState<(number | null)[]>(new Array(50).fill(null));
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -32,12 +33,39 @@ export default function CriticalThinkingInterface({
   const [isTimerActive, setIsTimerActive] = useState(true);
   const [showResult, setShowResult] = useState(false);
 
+  const calculateScore = useCallback((): number => {
+    let correct = 0;
+    answers.forEach((answer, index) => {
+      if (answer !== null && index < correctAnswers.length) {
+        const correctAnswerLetter = correctAnswers[index];
+        const userAnswerLetter = String.fromCharCode(65 + answer);
+        if (userAnswerLetter === correctAnswerLetter) {
+          correct++;
+        }
+      }
+    });
+    return correct;
+  }, [answers, correctAnswers]);
+
+  const finishTest = useCallback(() => {
+    setIsTimerActive(false);
+    const score = calculateScore();
+    onFinish(score, answers);
+  }, [answers, onFinish, calculateScore]);
+
+  const handleTimeUp = useCallback(() => {
+    setIsTimerActive(false);
+    if (mode === 'exam') {
+      finishTest();
+    }
+  }, [mode, finishTest]);
+
   useEffect(() => {
     if (timeLimit > 0) {
       setTimeLeft(timeLimit * 60);
       setIsTimerActive(true);
     }
-  }, [timeLimit]);
+  }, [timeLimit, handleTimeUp]);
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -46,10 +74,22 @@ export default function CriticalThinkingInterface({
       return 'Ваш прогресс будет потерян при перезагрузке страницы. Вы уверены, что хотите покинуть тест?';
     };
 
+    const handlePopState = (e: PopStateEvent) => {
+      const confirmLeave = window.confirm('Ваш прогресс будет потерян при выходе с теста. Вы уверены, что хотите покинуть тест?');
+      if (!confirmLeave) {
+        e.preventDefault();
+        window.history.pushState(null, '', window.location.href);
+      }
+    };
+
     window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+    
+    window.history.pushState(null, '', window.location.href);
 
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
     };
   }, []);
 
@@ -67,19 +107,12 @@ export default function CriticalThinkingInterface({
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isTimerActive, timeLeft]);
+  }, [isTimerActive, timeLeft, handleTimeUp]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const handleTimeUp = () => {
-    setIsTimerActive(false);
-    if (mode === 'exam') {
-      finishTest();
-    }
   };
 
   const handleAnswerSelect = (answerIndex: number) => {
@@ -122,26 +155,6 @@ export default function CriticalThinkingInterface({
     setCurrentQuestionIndex(questionIndex);
     setSelectedAnswer(answers[questionIndex]);
     setShowResult(false);
-  };
-
-  const finishTest = () => {
-    setIsTimerActive(false);
-    const score = calculateScore();
-    onFinish(score, answers);
-  };
-
-  const calculateScore = (): number => {
-    let correct = 0;
-    answers.forEach((answer, index) => {
-      if (answer !== null && index < correctAnswers.length) {
-        const correctAnswerLetter = correctAnswers[index];
-        const userAnswerLetter = String.fromCharCode(65 + answer);
-        if (userAnswerLetter === correctAnswerLetter) {
-          correct++;
-        }
-      }
-    });
-    return correct;
   };
 
   const getCorrectAnswerIndex = (questionIndex: number): number => {
