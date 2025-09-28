@@ -38,8 +38,27 @@ async function createAuth() {
         session: {
             expiresIn: 60 * 60 * 24 * 7,
             updateAge: 60 * 60 * 24,
+            cookieCache: {
+                enabled: true,
+                maxAge: 60 * 60 * 24 * 7,
+            },
         },
-        trustedOrigins: [process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"],
+        trustedOrigins: [
+            "http://localhost:3000",
+            "https://240-academy.vercel.app",
+            "https://240-academy-git-main-1oneegame.vercel.app",
+            ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
+            ...(process.env.NEXT_PUBLIC_API_URL ? [process.env.NEXT_PUBLIC_API_URL] : [])
+        ],
+        cookies: {
+            sessionToken: {
+                name: "better-auth.session_token",
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "lax",
+                maxAge: 60 * 60 * 24 * 7,
+            },
+        },
         advanced: {
             database: {
                 generateId: () => {

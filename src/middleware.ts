@@ -3,11 +3,18 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  // Пропускаем API роуты и статические файлы
+  if (pathname.startsWith('/api/') || pathname.startsWith('/_next/') || pathname.includes('.')) {
+    return NextResponse.next()
+  }
+
   if (pathname.startsWith('/student')) {
     const token = request.cookies.get('better-auth.session_token')
     
     if (!token) {
-      return NextResponse.redirect(new URL('/auth', request.url))
+      const url = new URL('/auth', request.url)
+      url.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(url)
     }
   }
 
@@ -15,7 +22,8 @@ export async function middleware(request: NextRequest) {
     const token = request.cookies.get('better-auth.session_token')
     
     if (token) {
-      return NextResponse.redirect(new URL('/student', request.url))
+      const redirectTo = request.nextUrl.searchParams.get('redirect') || '/student'
+      return NextResponse.redirect(new URL(redirectTo, request.url))
     }
   }
 
@@ -23,11 +31,10 @@ export async function middleware(request: NextRequest) {
     const token = request.cookies.get('better-auth.session_token')
     
     if (!token) {
-      return NextResponse.redirect(new URL('/auth', request.url))
+      const url = new URL('/auth', request.url)
+      url.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(url)
     }
-
-    // Для админ-роутов проверка роли будет происходить на уровне компонентов
-    // Middleware только проверяет наличие токена
   }
 
   return NextResponse.next()

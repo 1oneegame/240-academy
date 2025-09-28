@@ -55,7 +55,9 @@ const AuthPage: React.FC = () => {
 
         setIsSuccess(true);
         setTimeout(() => {
-          window.location.href = '/student';
+          const urlParams = new URLSearchParams(window.location.search);
+          const redirectTo = urlParams.get('redirect') || '/student';
+          window.location.href = redirectTo;
         }, 800);
       } else {
         const result = await authClient.signUp.email({
@@ -70,7 +72,9 @@ const AuthPage: React.FC = () => {
 
         setIsSuccess(true);
         setTimeout(() => {
-          window.location.href = '/student';
+          const urlParams = new URLSearchParams(window.location.search);
+          const redirectTo = urlParams.get('redirect') || '/student';
+          window.location.href = redirectTo;
         }, 800);
       }
 
