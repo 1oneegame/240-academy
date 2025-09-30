@@ -55,10 +55,20 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Пользователь не найден' }, { status: 404 });
     }
 
-    return NextResponse.json({ 
+    await db.collection('session').deleteMany({ userId: user._id });
+
+    const response = NextResponse.json({ 
       success: true,
-      message: 'Пароль изменен'
+      message: 'Пароль изменен, выполнен выход из системы'
     });
+    response.cookies.set('better-auth.session_token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0,
+      path: '/'
+    });
+    return response;
 
   } catch {
     return NextResponse.json(
