@@ -5,12 +5,10 @@ import { useSession } from '@/lib/auth-client'
 
 interface ProtectedRouteProps {
   children: ReactNode
-  redirectTo?: string
 }
 
 export function ProtectedRoute({ 
-  children, 
-  redirectTo = '/auth' 
+  children
 }: ProtectedRouteProps) {
   const { data: session, isPending } = useSession()
 
