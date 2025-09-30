@@ -1,7 +1,6 @@
 'use client'
 
-import { ReactNode, useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { ReactNode } from 'react'
 import { useSession } from '@/lib/auth-client'
 
 interface ProtectedRouteProps {
@@ -14,20 +13,8 @@ export function ProtectedRoute({
   redirectTo = '/auth' 
 }: ProtectedRouteProps) {
   const { data: session, isPending } = useSession()
-  const router = useRouter()
-  const [isChecking, setIsChecking] = useState(true)
 
-  useEffect(() => {
-    if (!isPending) {
-      if (!session) {
-        router.push(redirectTo)
-      } else {
-        setIsChecking(false)
-      }
-    }
-  }, [session, isPending, router, redirectTo])
-
-  if (isPending || isChecking) {
+  if (isPending) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center space-y-4">

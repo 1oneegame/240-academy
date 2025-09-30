@@ -8,15 +8,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  if (pathname.startsWith('/student')) {
-    const token = request.cookies.get('better-auth.session_token')
-    
-    if (!token) {
-      const url = new URL('/auth', request.url)
-      url.searchParams.set('redirect', pathname)
-      return NextResponse.redirect(url)
-    }
-  }
+  
 
   if (pathname === '/auth') {
     const token = request.cookies.get('better-auth.session_token')
@@ -41,5 +33,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/student/:path*', '/auth', '/admin/:path*']
+  matcher: ['/auth', '/admin/:path*']
 }

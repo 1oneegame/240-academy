@@ -47,8 +47,10 @@ async function createAuth() {
             "http://localhost:3000",
             "https://240-academy.vercel.app",
             "https://240-academy-git-main-1oneegame.vercel.app",
+            "https://nuet-academy.vercel.app",
             ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
-            ...(process.env.NEXT_PUBLIC_API_URL ? [process.env.NEXT_PUBLIC_API_URL] : [])
+            ...(process.env.NEXT_PUBLIC_API_URL ? [process.env.NEXT_PUBLIC_API_URL] : []),
+            ...(process.env.NEXT_PUBLIC_APP_URL ? [process.env.NEXT_PUBLIC_APP_URL] : [])
         ],
         cookies: {
             sessionToken: {
