@@ -4,7 +4,7 @@ import { ProtectedRoute } from '@/components/protected-route';
 import { BackToHomeButton } from '@/components/BackToHomeButton';
 import { VideoPlayer } from '@/components/VideoPlayer';
 import { VideoCourse, VideoLesson } from '@/types/video-course';
-import { Play, CheckCircle, Clock, BookOpen } from 'lucide-react';
+import { Play, CheckCircle, Clock, BookOpen, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
 
 export default function VideoCoursesPage() {
@@ -43,7 +43,7 @@ export default function VideoCoursesPage() {
   if (loading) {
     return (
       <ProtectedRoute>
-        <div className="flex flex-col pt-8 min-h-screen bg-white">
+        <div className="flex flex-col pt-8 min-h-screen bg-white overflow-x-hidden">
           <BackToHomeButton />
           <div className="flex items-center justify-center flex-1">
             <div className="text-xl text-gray-600">Загрузка видеокурсов...</div>
@@ -57,7 +57,15 @@ export default function VideoCoursesPage() {
     return (
       <ProtectedRoute>
         <div className="flex flex-col pt-8 min-h-screen bg-white">
-          <BackToHomeButton />
+          <div className="flex items-center justify-between px-0">
+            <button
+              onClick={() => setSelectedLesson(null)}
+              className="cursor-pointer w-fit flex flex-row gap-x-1 text-gray-600 hover:text-blue-900 transition-colors duration-300 p-4 items-center ml-12"
+            >
+              <ArrowLeft className="w-6 h-6" />
+              <span className="text-lg font-xl">Назад к темам</span>
+            </button>
+          </div>
           <div className="flex flex-1">
             <div className="flex-1 px-12 py-8">
               <div className="max-w-4xl mx-auto">
@@ -137,9 +145,9 @@ export default function VideoCoursesPage() {
       <ProtectedRoute>
         <div className="flex flex-col pt-8 min-h-screen bg-white">
           <BackToHomeButton />
-          <div className="flex flex-1">
-            <div className="flex-1 px-12 py-8">
-              <div className="max-w-4xl mx-auto">
+          <div className="flex">
+            <div className="px-12 py-8">
+              <div className="mx-auto">
                 <div className="mb-8">
                   <h1 className="text-4xl font-semibold text-blue-900 mb-4">
                     {selectedCourse.title}
@@ -240,21 +248,21 @@ export default function VideoCoursesPage() {
           </div>
         </section>
 
-        <section className="flex flex-col px-12 pt-16 items-center">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 container">
+        <section className="flex flex-col px-12 pt-16 overflow-hidden">
+          <div className="w-full max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {videoCourses.map((course) => (
               <div 
                 key={course._id}
                 onClick={() => setSelectedCourse(course)}
-                className="group relative flex flex-col border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer bg-white"
+                className="group relative flex flex-col border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-transform duration-300 hover:scale-105 cursor-pointer bg-white"
               >
-                <div className="aspect-video bg-gray-200 rounded-lg mb-4 overflow-hidden">
+                <div className="relative aspect-video bg-gray-200 rounded-lg mb-4 overflow-hidden">
                   <Image 
                     src={course.thumbnail} 
                     alt={course.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                    width={400}
-                    height={225}
+                    fill
+                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                    className="object-cover group-hover:scale-110 transition-transform duration-300"
                   />
                 </div>
                 

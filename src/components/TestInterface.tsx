@@ -35,6 +35,13 @@ export default function TestInterface({ test, onFinish, onExit, mode }: TestInte
   }, [answers, test.questions]);
 
   const finishTest = useCallback(() => {
+    const unanswered = answers.filter(a => a === null).length;
+    if (unanswered > 0) {
+      const proceed = window.confirm(`Вы не ответили на ${unanswered} вопросов. Вы уверены, что хотите сдать тест сейчас?`);
+      if (!proceed) {
+        return;
+      }
+    }
     setIsTimerActive(false);
     const score = calculateScore();
     onFinish(score, answers);

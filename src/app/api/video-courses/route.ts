@@ -9,7 +9,6 @@ export async function GET() {
     const client = await clientPromise;
     const db = client.db("240academy");
     const videoCourses = await db.collection('video-courses').find({}).sort({ createdAt: -1 }).toArray();
-    
     return NextResponse.json(videoCourses);
   } catch {
     return NextResponse.json({ error: 'Failed to fetch video courses' }, { status: 500 });

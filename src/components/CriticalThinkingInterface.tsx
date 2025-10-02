@@ -47,7 +47,14 @@ export default function CriticalThinkingInterface({
     return correct;
   }, [answers, correctAnswers]);
 
-  const finishTest = useCallback(() => {
+  const finishTest = useCallback((forceFinish = false) => {
+    const unanswered = answers.filter(a => a === null).length;
+    if (!forceFinish && unanswered > 0) {
+      const proceed = window.confirm(`Вы не ответили на ${unanswered} вопросов. Вы уверены, что хотите сдать тест сейчас?`);
+      if (!proceed) {
+        return;
+      }
+    }
     setIsTimerActive(false);
     const score = calculateScore();
     onFinish(score, answers);
@@ -56,7 +63,7 @@ export default function CriticalThinkingInterface({
   const handleTimeUp = useCallback(() => {
     setIsTimerActive(false);
     if (mode === 'exam') {
-      finishTest();
+      finishTest(true);
     }
   }, [mode, finishTest]);
 
@@ -192,7 +199,7 @@ export default function CriticalThinkingInterface({
           </div>
           
           <button
-            onClick={finishTest}
+            onClick={() => finishTest()}
             className="bg-blue-800 hover:bg-blue-900 text-white px-4 py-2 rounded-lg font-medium transition-colors"
           >
             Сдать

@@ -4,7 +4,7 @@ import { User, Settings, BarChart3, Clock, CheckCircle, XCircle, X, Eye } from "
 import { QuitButton } from "@/components/QuitButton";
 import { ProtectedRoute } from "@/components/protected-route";
 import { BackToHomeButton } from "@/components/BackToHomeButton";
-import { useSession } from "@/lib/auth-client";
+import { useSession, signOut } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
 
@@ -111,6 +111,8 @@ export default function ProfilePage() {
         toast.success('Пароль изменен');
         setNewPassword("");
         setConfirmPassword("");
+        await signOut();
+        window.location.href = '/auth?redirect=/student';
       } else {
         toast.error('Ошибка изменения пароля');
       }
@@ -313,38 +315,6 @@ export default function ProfilePage() {
                       </div>
                     </div>
                   )}
-                </div>
-
-                <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
-                  <h2 className="text-2xl font-semibold text-blue-900 mb-6">Смена пароля</h2>
-                  <form onSubmit={handlePasswordChange} className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Новый пароль</label>
-                      <input
-                        type="password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Введите новый пароль"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Подтвердите пароль</label>
-                      <input
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Подтвердите новый пароль"
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      className="px-6 py-2 bg-blue-800 text-white rounded-lg hover:bg-blue-900 transition-colors"
-                    >
-                      Изменить пароль
-                    </button>
-                  </form>
                 </div>
               </div>
             )}

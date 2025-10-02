@@ -47,8 +47,10 @@ export default function TestInterfacePage() {
     const unansweredQuestions = answers.filter(answer => answer === null).length;
     
     if (!forceFinish && unansweredQuestions > 0) {
-      toast.error(`Вы не ответили на ${unansweredQuestions} вопросов. Ответьте на все вопросы или дождитесь окончания времени.`);
-      return;
+      const proceed = window.confirm(`Вы не ответили на ${unansweredQuestions} вопросов. Вы уверены, что хотите сдать тест сейчас?`);
+      if (!proceed) {
+        return;
+      }
     }
     
     setIsTimerActive(false);
@@ -98,7 +100,7 @@ export default function TestInterfacePage() {
 
   const handleTimeUp = useCallback(() => {
     setIsTimerActive(false);
-    finishTest();
+    finishTest(true);
   }, [finishTest]);
 
   useEffect(() => {
