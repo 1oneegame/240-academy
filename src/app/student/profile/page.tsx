@@ -4,7 +4,7 @@ import { User, Settings, BarChart3, Clock, CheckCircle, XCircle, X, Eye } from "
 import { QuitButton } from "@/components/QuitButton";
 import { ProtectedRoute } from "@/components/protected-route";
 import { BackToHomeButton } from "@/components/BackToHomeButton";
-import { useSession, signOut } from "@/lib/auth-client";
+import { useSession } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
 
@@ -40,8 +40,6 @@ export default function ProfilePage() {
     surname: String((session?.user as Record<string, unknown>)?.surname || "")
   });
   const [isEditing, setIsEditing] = useState(false);
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [selectedResult, setSelectedResult] = useState<TestResult | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [testDetails, setTestDetails] = useState<Record<string, unknown> | null>(null);
@@ -84,40 +82,6 @@ export default function ProfilePage() {
       }
     } catch {
       toast.error('Ошибка обновления профиля');
-    }
-  };
-
-  const handlePasswordChange = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newPassword !== confirmPassword) {
-      toast.error('Пароли не совпадают');
-      return;
-    }
-    if (newPassword.length < 6) {
-      toast.error('Пароль должен содержать минимум 6 символов');
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/profile/password', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ password: newPassword }),
-      });
-
-      if (response.ok) {
-        toast.success('Пароль изменен');
-        setNewPassword("");
-        setConfirmPassword("");
-        await signOut();
-        window.location.href = '/auth?redirect=/student';
-      } else {
-        toast.error('Ошибка изменения пароля');
-      }
-    } catch {
-      toast.error('Ошибка изменения пароля');
     }
   };
 
